@@ -27,8 +27,29 @@
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script crossorigin src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
 
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-storage-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAslZwvzWGaU5Q_RrFg1q5R7-0C78HGk9A",
+    authDomain: "tico-tico-32549.firebaseapp.com",
+    databaseURL: "https://tico-tico-32549-default-rtdb.firebaseio.com",
+    projectId: "tico-tico-32549",
+    storageBucket: "tico-tico-32549.firebasestorage.app",
+    messagingSenderId: "345090719263",
+    appId: "1:345090719263:web:6a239e4ad588924250df2a",
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
+
 <script type="text/babel" data-presets="react">
 const { useState, useMemo, useEffect, useRef } = React;
+
+const auth = firebase.auth();
+const db = firebase.database();
+const storage = firebase.storage();
 
 function IconBase({ children, style = {}, strokeWidth }) {
   return (
@@ -483,128 +504,90 @@ async function idbClearAll() {
   }
 }
 
-const ACCOUNTS_KEY = "khurafa_accounts_v1";
-const SESSION_KEY = "khurafa_session_v1";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function toHandle(name) {
-  return name.trim().replace(/\s+/g, "_");
+  return (name || "").trim().replace(/\s+/g, "_");
 }
 
-function randomSalt() {
-  if (window.crypto && window.crypto.getRandomValues) {
-    const arr = new Uint8Array(16);
-    window.crypto.getRandomValues(arr);
-    return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
+function translateAuthError(err) {
+  const code = err && err.code ? err.code : "";
+  const map = {
+    "auth/email-already-in-use": "هذا البريد مُسجَّل بحساب بالفعل",
+    "auth/invalid-email": "البريد الإلكتروني غير صحيح",
+    "auth/weak-password": "كلمة المرور ضعيفة، اختر 6 أحرف على الأقل",
+    "auth/user-not-found": "لا يوجد حساب بهذا البريد الإلكتروني",
+    "auth/wrong-password": "كلمة المرور غير صحيحة",
+    "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "auth/too-many-requests": "محاولات كثيرة، حاول لاحقًا",
+    "auth/popup-closed-by-user": "تم إغلاق نافذة تسجيل الدخول",
+    "auth/network-request-failed": "تعذّر الاتصال بالشبكة",
+    "auth/unauthorized-domain": "هذا النطاق غير مُصرَّح له بتسجيل الدخول عبر Google (يلزم إضافته في إعدادات Firebase)",
+  };
+  return map[code] || (err && err.message) || "حدث خطأ غير متوقع";
+}
+
+async function ensureUserProfile(user) {
+  const ref = db.ref("users/" + user.uid);
+  const snap = await ref.get();
+  if (!snap.exists()) {
+    await ref.set({
+      name: user.displayName || "مستخدم خُرافة",
+      email: user.email || "",
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+    });
   }
-  return Math.random().toString(16).slice(2) + Date.now().toString(16);
+  return (await ref.get()).val();
 }
 
-async function sha256Hex(text) {
-  if (window.crypto && window.crypto.subtle) {
-    try {
-      const enc = new TextEncoder().encode(text);
-      const buf = await window.crypto.subtle.digest("SHA-256", enc);
-      return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-    } catch (e) {}
-  }
-  let h1 = 0xdeadbeef;
-  let h2 = 0x41c6ce57;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-  }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
-}
-
-async function hashSecret(secret, salt) {
-  return sha256Hex(salt + ":" + secret);
-}
-
-function loadAccounts() {
+async function fetchUserProfile(uid) {
   try {
-    const raw = window.localStorage.getItem(ACCOUNTS_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-function saveAccounts(accounts) {
-  try {
-    window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function loadSession() {
-  try {
-    const raw = window.localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const snap = await db.ref("users/" + uid).get();
+    return snap.exists() ? snap.val() : null;
   } catch (e) {
     return null;
   }
 }
 
-function saveSession(session) {
-  try {
-    if (session) window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    else window.localStorage.removeItem(SESSION_KEY);
-    return true;
-  } catch (e) {
-    return false;
-  }
+async function followRealUser(myUid, targetUid) {
+  const updates = {};
+  updates["following/" + myUid + "/" + targetUid] = true;
+  updates["followers/" + targetUid + "/" + myUid] = true;
+  await db.ref().update(updates);
 }
 
-const PENDING_SIGNUPS_KEY = "khurafa_pending_signups_v1";
-const PENDING_RESETS_KEY = "khurafa_pending_resets_v1";
-const OTP_TTL_MS = 10 * 60 * 1000;
-const OTP_RESEND_COOLDOWN_MS = 30 * 1000;
-const OTP_MAX_ATTEMPTS = 5;
-
-function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+async function unfollowRealUser(myUid, targetUid) {
+  const updates = {};
+  updates["following/" + myUid + "/" + targetUid] = null;
+  updates["followers/" + targetUid + "/" + myUid] = null;
+  await db.ref().update(updates);
 }
 
-function loadPendingSignups() {
-  try {
-    const raw = window.localStorage.getItem(PENDING_SIGNUPS_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) {
-    return {};
-  }
+function listenVideos(onChange) {
+  const ref = db.ref("videos").orderByChild("createdAt");
+  const handler = ref.on("value", (snap) => {
+    const list = [];
+    snap.forEach((child) => {
+      list.push({ id: child.key, ...child.val() });
+    });
+    list.reverse();
+    onChange(list);
+  });
+  return () => ref.off("value", handler);
 }
 
-function savePendingSignups(obj) {
-  try {
-    window.localStorage.setItem(PENDING_SIGNUPS_KEY, JSON.stringify(obj));
-    return true;
-  } catch (e) {
-    return false;
-  }
+async function publishVideoRecord(record) {
+  const ref = db.ref("videos").push();
+  const data = { ...record, id: ref.key, createdAt: firebase.database.ServerValue.TIMESTAMP };
+  await ref.set(data);
+  return ref.key;
 }
 
-function loadPendingResets() {
-  try {
-    const raw = window.localStorage.getItem(PENDING_RESETS_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-function savePendingResets(obj) {
-  try {
-    window.localStorage.setItem(PENDING_RESETS_KEY, JSON.stringify(obj));
-    return true;
-  } catch (e) {
-    return false;
-  }
+async function uploadVideoToStorage(uid, videoId, file) {
+  const path = "videos/" + uid + "/" + videoId;
+  const ref = storage.ref(path);
+  await ref.put(file);
+  return await ref.getDownloadURL();
 }
 
 const SPARKLES = [
@@ -670,8 +653,8 @@ function ActionButton({ icon, label, active, activeColor, onClick }) {
   );
 }
 
-function RealVideoLayer({ videoId, playRequested, muted }) {
-  const [url, setUrl] = useState(null);
+function RealVideoLayer({ videoId, remoteUrl, playRequested, muted }) {
+  const [url, setUrl] = useState(remoteUrl || null);
   const [failed, setFailed] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -679,6 +662,10 @@ function RealVideoLayer({ videoId, playRequested, muted }) {
   const bgVideoRef = useRef(null);
 
   useEffect(() => {
+    if (remoteUrl) {
+      setUrl(remoteUrl);
+      return;
+    }
     let objectUrl = null;
     let cancelled = false;
     idbGetVideo(videoId).then((blob) => {
@@ -694,7 +681,7 @@ function RealVideoLayer({ videoId, playRequested, muted }) {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [videoId]);
+  }, [videoId, remoteUrl]);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -815,6 +802,7 @@ function VideoCard({
   liked,
   saved,
   following,
+  isOwnPost,
   active,
   muted,
   burstKey,
@@ -881,7 +869,7 @@ function VideoCard({
         background: `linear-gradient(165deg, ${c1} 0%, ${palette.void} 55%, ${c3} 100%)`,
       }}
     >
-      {hasReal ? <RealVideoLayer videoId={video.id} playRequested={playRequested} muted={muted} /> : null}
+      {hasReal ? <RealVideoLayer videoId={video.id} remoteUrl={video.videoUrl} playRequested={playRequested} muted={muted} /> : null}
 
       <div
         style={{
@@ -1046,7 +1034,7 @@ function VideoCard({
               {video.avatar}
             </div>
           </div>
-          {!following && (
+          {!following && !isOwnPost && (
             <div
               style={{
                 position: "absolute",
@@ -1529,7 +1517,7 @@ function CreateModal({
   );
 }
 
-function DiscoverView({ query, onQueryChange, videos, followMap, onToggleFollow, onSelectVideo }) {
+function DiscoverView({ query, onQueryChange, videos, followMap, onToggleFollow, onSelectVideo, followingUids, session, onToggleRealFollow }) {
   const trimmed = query.trim();
   const results = trimmed ? videos.filter((v) => (v.caption + " " + v.user + " " + v.song).indexOf(trimmed) !== -1) : [];
   return (
@@ -1615,22 +1603,31 @@ function DiscoverView({ query, onQueryChange, videos, followMap, onToggleFollow,
                     </div>
                     <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 13.5, fontWeight: 600 }}>@{v.user}</span>
                   </div>
-                  <button
-                    onClick={() => onToggleFollow(v.id)}
-                    style={{
-                      background: followMap[v.id] ? "transparent" : `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
-                      border: followMap[v.id] ? `1px solid ${palette.moon}44` : "none",
-                      borderRadius: 999,
-                      padding: "6px 16px",
-                      color: palette.moon,
-                      fontFamily: "'Tajawal', sans-serif",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {followMap[v.id] ? "متابَع" : "متابعة"}
-                  </button>
+                  {v.authorUid && session && v.authorUid === session.uid ? null : (
+                    <button
+                      onClick={() => {
+                        if (v.authorUid) {
+                          if (!session) return;
+                          onToggleRealFollow(v.authorUid);
+                        } else {
+                          onToggleFollow(v.id);
+                        }
+                      }}
+                      style={{
+                        background: (v.authorUid ? !!followingUids[v.authorUid] : followMap[v.id]) ? "transparent" : `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+                        border: (v.authorUid ? !!followingUids[v.authorUid] : followMap[v.id]) ? `1px solid ${palette.moon}44` : "none",
+                        borderRadius: 999,
+                        padding: "6px 16px",
+                        color: palette.moon,
+                        fontFamily: "'Tajawal', sans-serif",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {(v.authorUid ? !!followingUids[v.authorUid] : followMap[v.id]) ? "متابَع" : "متابعة"}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1731,12 +1728,11 @@ function InboxView({ notifications, onMarkRead }) {
   );
 }
 
-function ProfileView({ videos, likedMap, savedMap, followMap, profileTab, setProfileTab, onSelectVideo, storageOK, resetArmed, onReset, session, onLogout }) {
+function ProfileView({ videos, likedMap, savedMap, followMap, profileTab, setProfileTab, onSelectVideo, storageOK, resetArmed, onReset, session, onLogout, followingCount, followersCount }) {
   const savedList = videos.filter((v) => savedMap[v.id]);
   const likedList = videos.filter((v) => likedMap[v.id]);
-  const list = profileTab === "saved" ? savedList : likedList;
-  const followingCount = Object.values(followMap).filter(Boolean).length;
-  const likedCount = Object.values(likedMap).filter(Boolean).length;
+  const postsList = session ? videos.filter((v) => v.authorUid === session.uid) : [];
+  const list = profileTab === "posts" ? postsList : profileTab === "saved" ? savedList : likedList;
   const displayName = session ? session.name : "ضيف الأسطورة";
   const displayHandle = session ? toHandle(session.name) : "ضيف_الأسطورة";
 
@@ -1765,9 +1761,9 @@ function ProfileView({ videos, likedMap, savedMap, followMap, profileTab, setPro
 
         <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 22 }}>
           {[
+            { label: "منشورات", value: postsList.length },
+            { label: "متابَعون", value: followersCount },
             { label: "يتابع", value: followingCount },
-            { label: "متابعون", value: 128 },
-            { label: "إعجابات", value: likedCount },
           ].map((s) => (
             <div key={s.label}>
               <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 16 }}>{formatCount(s.value)}</div>
@@ -1778,6 +1774,7 @@ function ProfileView({ videos, likedMap, savedMap, followMap, profileTab, setPro
 
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
           {[
+            { key: "posts", label: "منشوراتي" },
             { key: "saved", label: "محفوظ" },
             { key: "liked", label: "أعجبك" },
           ].map((t) => (
@@ -1803,7 +1800,7 @@ function ProfileView({ videos, likedMap, savedMap, followMap, profileTab, setPro
 
         {list.length === 0 ? (
           <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, marginTop: 40 }}>
-            {profileTab === "saved" ? "لم تحفظ أي سحر بعد ✨" : "لم تُعجب بأي فيديو بعد ✨"}
+            {profileTab === "posts" ? "لم تنشر شيئًا بعد — اضغط + لنشر أول لحظة خرافية ✨" : profileTab === "saved" ? "لم تحفظ أي سحر بعد ✨" : "لم تُعجب بأي فيديو بعد ✨"}
           </p>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
@@ -1969,64 +1966,27 @@ const labelStyle = {
   marginBottom: 6,
 };
 
-function OtpVerifyStep({ title, email, code, value, onChange, onVerify, onResend, onBack, busy, error, resendSeconds }) {
-  return (
-    <form onSubmit={onVerify}>
-      <p style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 6, textAlign: "center" }}>
-        {title}
-      </p>
-      <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginBottom: 14, textAlign: "center", direction: "ltr" }}>
-        {email}
-      </p>
+const fieldStyle = {
+  width: "100%",
+  boxSizing: "border-box",
+  background: "rgba(255,255,255,0.07)",
+  border: `1px solid ${palette.moon}22`,
+  borderRadius: 12,
+  padding: "11px 14px",
+  color: palette.moon,
+  fontFamily: "'Tajawal', sans-serif",
+  fontSize: 13.5,
+  outline: "none",
+  marginBottom: 12,
+};
 
-      <div
-        style={{
-          background: "rgba(255,209,102,0.08)",
-          border: `1px dashed ${palette.gold}55`,
-          borderRadius: 12,
-          padding: "10px 12px",
-          marginBottom: 16,
-          textAlign: "center",
-        }}
-      >
-        <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11, marginBottom: 6, lineHeight: 1.6 }}>
-          هذا تطبيق مستقل بلا خادم بريد فعلي، فلا يمكنه إرسال إيميلات حقيقية. إليك رمزك بدلاً من ذلك:
-        </p>
-        <p style={{ color: palette.gold, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 22, letterSpacing: 4, direction: "ltr", margin: 0 }}>
-          {code}
-        </p>
-      </div>
-
-      {error ? (
-        <p style={{ color: palette.magenta, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginBottom: 10, textAlign: "center" }}>{error}</p>
-      ) : null}
-
-      <label style={labelStyle}>أدخل رمز التحقق المكوّن من 6 أرقام</label>
-      <input
-        type="text"
-        inputMode="numeric"
-        maxLength={6}
-        value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
-        style={{ ...fieldStyle, textAlign: "center", fontSize: 20, letterSpacing: 6, direction: "ltr" }}
-        placeholder="000000"
-      />
-
-      <button type="submit" disabled={busy || value.length !== 6} style={submitBtnStyleShared(!busy && value.length === 6)}>
-        {busy ? "جارٍ التحقق..." : "تحقّق"}
-      </button>
-
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
-        <button type="button" onClick={onBack} style={linkBtnStyleShared}>
-          رجوع
-        </button>
-        <button type="button" onClick={onResend} disabled={resendSeconds > 0} style={{ ...linkBtnStyleShared, opacity: resendSeconds > 0 ? 0.5 : 1, cursor: resendSeconds > 0 ? "not-allowed" : "pointer" }}>
-          {resendSeconds > 0 ? `إعادة الإرسال بعد ${resendSeconds}ث` : "إعادة إرسال الرمز"}
-        </button>
-      </div>
-    </form>
-  );
-}
+const labelStyle = {
+  display: "block",
+  color: palette.lilac,
+  fontFamily: "'Tajawal', sans-serif",
+  fontSize: 12,
+  marginBottom: 6,
+};
 
 function submitBtnStyleShared(enabled) {
   return {
@@ -2056,43 +2016,39 @@ const linkBtnStyleShared = {
   padding: 0,
 };
 
-function AuthScreen({ onAuthenticated }) {
+function GoogleIcon({ size }) {
+  return (
+    <svg width={size || 18} height={size || 18} viewBox="0 0 48 48">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.6 5.5 29.6 3.5 24 3.5 12.7 3.5 3.5 12.7 3.5 24S12.7 44.5 24 44.5 44.5 35.3 44.5 24c0-1.2-.1-2.4-.9-3.5z" />
+      <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.6 6.5 29.6 4.5 24 4.5c-7.7 0-14.4 4.3-17.7 10.2z" />
+      <path fill="#4CAF50" d="M24 44.5c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.4c-2 1.4-4.6 2.2-7.7 2.2-5.2 0-9.6-3.3-11.3-7.9l-6.6 5.1C9.5 40.1 16.2 44.5 24 44.5z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.4C41.5 36 44.5 30.5 44.5 24c0-1.2-.1-2.4-.9-3.5z" />
+    </svg>
+  );
+}
+
+function AuthScreen() {
   const [mode, setMode] = useState("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [pendingCode, setPendingCode] = useState("");
-  const [otpValue, setOtpValue] = useState("");
-  const [resendAt, setResendAt] = useState(0);
-  const [now, setNow] = useState(Date.now());
-
   const [forgotEmail, setForgotEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-
-  useEffect(() => {
-    if (mode !== "signupVerify" && mode !== "forgot2") return;
-    const t = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(t);
-  }, [mode]);
-
-  const resendSeconds = Math.max(0, Math.ceil((resendAt - now) / 1000));
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   const switchMode = (m) => {
     setMode(m);
     setError("");
+    setInfo("");
   };
-
-  const startCooldown = () => setResendAt(Date.now() + OTP_RESEND_COOLDOWN_MS);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setInfo("");
     const normEmail = email.trim().toLowerCase();
     if (!EMAIL_RE.test(normEmail)) {
       setError("البريد الإلكتروني غير صحيح");
@@ -2103,26 +2059,20 @@ function AuthScreen({ onAuthenticated }) {
       return;
     }
     setBusy(true);
-    const accounts = loadAccounts();
-    const acc = accounts[normEmail];
-    if (!acc) {
+    try {
+      const cred = await auth.signInWithEmailAndPassword(normEmail, password);
+      await ensureUserProfile(cred.user);
       setBusy(false);
-      setError("لا يوجد حساب بهذا البريد الإلكتروني");
-      return;
+    } catch (err) {
+      setBusy(false);
+      setError(translateAuthError(err));
     }
-    const hash = await hashSecret(password, acc.salt);
-    setBusy(false);
-    if (hash !== acc.passwordHash) {
-      setError("كلمة المرور غير صحيحة");
-      return;
-    }
-    saveSession({ email: normEmail });
-    onAuthenticated({ name: acc.name, email: normEmail });
   };
 
-  const handleSignupSubmit = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
+    setInfo("");
     const trimmedName = name.trim();
     const normEmail = email.trim().toLowerCase();
     if (!trimmedName) {
@@ -2142,195 +2092,72 @@ function AuthScreen({ onAuthenticated }) {
       return;
     }
     setBusy(true);
-    const accounts = loadAccounts();
-    if (accounts[normEmail]) {
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(normEmail, password);
+      await cred.user.updateProfile({ displayName: trimmedName });
+      await db.ref("users/" + cred.user.uid).set({
+        name: trimmedName,
+        email: normEmail,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+      });
       setBusy(false);
-      setError("هذا البريد مُسجَّل بحساب بالفعل");
-      return;
+    } catch (err) {
+      setBusy(false);
+      setError(translateAuthError(err));
     }
-    const salt = randomSalt();
-    const passwordHash = await hashSecret(password, salt);
-    const code = generateOtp();
-    const otpHash = await hashSecret(code, salt);
-    const pending = loadPendingSignups();
-    pending[normEmail] = { name: trimmedName, email: normEmail, salt, passwordHash, otpHash, expiresAt: Date.now() + OTP_TTL_MS, attempts: 0 };
-    savePendingSignups(pending);
-    setBusy(false);
-    setPendingEmail(normEmail);
-    setPendingCode(code);
-    setOtpValue("");
-    startCooldown();
-    switchMode("signupVerify");
   };
 
-  const handleVerifySignupCode = async (e) => {
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setInfo("");
+    setGoogleBusy(true);
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await auth.signInWithPopup(provider);
+      await ensureUserProfile(result.user);
+      setGoogleBusy(false);
+    } catch (err) {
+      setGoogleBusy(false);
+      if (err && err.code === "auth/popup-blocked") {
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await auth.signInWithRedirect(provider);
+          return;
+        } catch (err2) {
+          setError(translateAuthError(err2));
+          return;
+        }
+      }
+      setError(translateAuthError(err));
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setBusy(true);
-    const pending = loadPendingSignups();
-    const rec = pending[pendingEmail];
-    if (!rec) {
-      setBusy(false);
-      setError("انتهت صلاحية طلب التسجيل، أعد المحاولة");
-      switchMode("signup");
-      return;
-    }
-    if (Date.now() > rec.expiresAt) {
-      setBusy(false);
-      setError("انتهت صلاحية الرمز، اطلب رمزًا جديدًا");
-      return;
-    }
-    if (rec.attempts >= OTP_MAX_ATTEMPTS) {
-      setBusy(false);
-      setError("تجاوزت عدد المحاولات المسموح، اطلب رمزًا جديدًا");
-      return;
-    }
-    const hash = await hashSecret(otpValue, rec.salt);
-    if (hash !== rec.otpHash) {
-      rec.attempts += 1;
-      pending[pendingEmail] = rec;
-      savePendingSignups(pending);
-      setBusy(false);
-      setError(`رمز غير صحيح (المحاولة ${rec.attempts} من ${OTP_MAX_ATTEMPTS})`);
-      return;
-    }
-    const accounts = loadAccounts();
-    accounts[pendingEmail] = { name: rec.name, email: rec.email, salt: rec.salt, passwordHash: rec.passwordHash, createdAt: Date.now() };
-    saveAccounts(accounts);
-    delete pending[pendingEmail];
-    savePendingSignups(pending);
-    saveSession({ email: pendingEmail });
-    setBusy(false);
-    onAuthenticated({ name: rec.name, email: pendingEmail });
-  };
-
-  const handleResendSignupCode = async () => {
-    if (resendSeconds > 0) return;
-    setError("");
-    const pending = loadPendingSignups();
-    const rec = pending[pendingEmail];
-    if (!rec) return;
-    const code = generateOtp();
-    const otpHash = await hashSecret(code, rec.salt);
-    rec.otpHash = otpHash;
-    rec.expiresAt = Date.now() + OTP_TTL_MS;
-    rec.attempts = 0;
-    pending[pendingEmail] = rec;
-    savePendingSignups(pending);
-    setPendingCode(code);
-    setOtpValue("");
-    startCooldown();
-  };
-
-  const handleForgotStep1 = async (e) => {
-    e.preventDefault();
-    setError("");
+    setInfo("");
     const normEmail = forgotEmail.trim().toLowerCase();
     if (!EMAIL_RE.test(normEmail)) {
       setError("البريد الإلكتروني غير صحيح");
       return;
     }
     setBusy(true);
-    const accounts = loadAccounts();
-    const acc = accounts[normEmail];
-    if (!acc) {
+    try {
+      await auth.sendPasswordResetEmail(normEmail);
       setBusy(false);
-      setError("لا يوجد حساب بهذا البريد الإلكتروني");
-      return;
-    }
-    const code = generateOtp();
-    const otpHash = await hashSecret(code, acc.salt);
-    const pendingResets = loadPendingResets();
-    pendingResets[normEmail] = { email: normEmail, otpHash, expiresAt: Date.now() + OTP_TTL_MS, attempts: 0 };
-    savePendingResets(pendingResets);
-    setBusy(false);
-    setPendingEmail(normEmail);
-    setPendingCode(code);
-    setOtpValue("");
-    startCooldown();
-    switchMode("forgot2");
-  };
-
-  const handleVerifyResetCode = async (e) => {
-    e.preventDefault();
-    setError("");
-    setBusy(true);
-    const accounts = loadAccounts();
-    const acc = accounts[pendingEmail];
-    const pendingResets = loadPendingResets();
-    const rec = pendingResets[pendingEmail];
-    if (!acc || !rec) {
+      setInfo("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني ✨");
+    } catch (err) {
       setBusy(false);
-      setError("انتهت صلاحية الطلب، أعد المحاولة");
-      switchMode("forgot1");
-      return;
+      setError(translateAuthError(err));
     }
-    if (Date.now() > rec.expiresAt) {
-      setBusy(false);
-      setError("انتهت صلاحية الرمز، اطلب رمزًا جديدًا");
-      return;
-    }
-    if (rec.attempts >= OTP_MAX_ATTEMPTS) {
-      setBusy(false);
-      setError("تجاوزت عدد المحاولات المسموح، اطلب رمزًا جديدًا");
-      return;
-    }
-    const hash = await hashSecret(otpValue, acc.salt);
-    if (hash !== rec.otpHash) {
-      rec.attempts += 1;
-      pendingResets[pendingEmail] = rec;
-      savePendingResets(pendingResets);
-      setBusy(false);
-      setError(`رمز غير صحيح (المحاولة ${rec.attempts} من ${OTP_MAX_ATTEMPTS})`);
-      return;
-    }
-    setBusy(false);
-    switchMode("forgot3");
-  };
-
-  const handleResendResetCode = async () => {
-    if (resendSeconds > 0) return;
-    setError("");
-    const accounts = loadAccounts();
-    const acc = accounts[pendingEmail];
-    if (!acc) return;
-    const code = generateOtp();
-    const otpHash = await hashSecret(code, acc.salt);
-    const pendingResets = loadPendingResets();
-    pendingResets[pendingEmail] = { email: pendingEmail, otpHash, expiresAt: Date.now() + OTP_TTL_MS, attempts: 0 };
-    savePendingResets(pendingResets);
-    setPendingCode(code);
-    setOtpValue("");
-    startCooldown();
-  };
-
-  const handleForgotStep3 = async (e) => {
-    e.preventDefault();
-    setError("");
-    if (newPassword.length < 6) {
-      setError("كلمة المرور 6 أحرف على الأقل");
-      return;
-    }
-    if (newPassword !== newPasswordConfirm) {
-      setError("كلمتا المرور غير متطابقتين");
-      return;
-    }
-    setBusy(true);
-    const accounts = loadAccounts();
-    const acc = accounts[pendingEmail];
-    const salt = randomSalt();
-    const passwordHash = await hashSecret(newPassword, salt);
-    accounts[pendingEmail] = { ...acc, salt, passwordHash };
-    saveAccounts(accounts);
-    const pendingResets = loadPendingResets();
-    delete pendingResets[pendingEmail];
-    savePendingResets(pendingResets);
-    setBusy(false);
-    switchMode("forgotDone");
   };
 
   const errorBox = error ? (
     <p style={{ color: palette.magenta, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginBottom: 10, textAlign: "center" }}>{error}</p>
+  ) : null;
+
+  const infoBox = info ? (
+    <p style={{ color: palette.cyan, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginBottom: 10, textAlign: "center", lineHeight: 1.6 }}>{info}</p>
   ) : null;
 
   return (
@@ -2356,42 +2183,76 @@ function AuthScreen({ onAuthenticated }) {
         </div>
 
         {(mode === "login" || mode === "signup") && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 18, background: "rgba(255,255,255,0.05)", borderRadius: 999, padding: 4 }}>
+          <>
+            <div style={{ display: "flex", gap: 8, marginBottom: 18, background: "rgba(255,255,255,0.05)", borderRadius: 999, padding: 4 }}>
+              <button
+                onClick={() => switchMode("login")}
+                style={{
+                  flex: 1,
+                  padding: "8px 0",
+                  borderRadius: 999,
+                  border: "none",
+                  cursor: "pointer",
+                  background: mode === "login" ? `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})` : "transparent",
+                  color: palette.moon,
+                  fontFamily: "'Tajawal', sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                }}
+              >
+                تسجيل الدخول
+              </button>
+              <button
+                onClick={() => switchMode("signup")}
+                style={{
+                  flex: 1,
+                  padding: "8px 0",
+                  borderRadius: 999,
+                  border: "none",
+                  cursor: "pointer",
+                  background: mode === "signup" ? `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})` : "transparent",
+                  color: palette.moon,
+                  fontFamily: "'Tajawal', sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                }}
+              >
+                إنشاء حساب
+              </button>
+            </div>
+
             <button
-              onClick={() => switchMode("login")}
+              onClick={handleGoogleSignIn}
+              disabled={googleBusy}
               style={{
-                flex: 1,
-                padding: "8px 0",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                padding: "11px 0",
                 borderRadius: 999,
-                border: "none",
-                cursor: "pointer",
-                background: mode === "login" ? `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})` : "transparent",
+                border: `1px solid ${palette.moon}33`,
+                background: "rgba(255,255,255,0.06)",
                 color: palette.moon,
                 fontFamily: "'Tajawal', sans-serif",
                 fontWeight: 700,
                 fontSize: 13,
+                cursor: googleBusy ? "not-allowed" : "pointer",
+                opacity: googleBusy ? 0.6 : 1,
+                marginBottom: 16,
               }}
             >
-              تسجيل الدخول
+              <GoogleIcon />
+              {googleBusy ? "جارٍ الاتصال بـ Google..." : "متابعة باستخدام Google"}
             </button>
-            <button
-              onClick={() => switchMode("signup")}
-              style={{
-                flex: 1,
-                padding: "8px 0",
-                borderRadius: 999,
-                border: "none",
-                cursor: "pointer",
-                background: mode === "signup" ? `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})` : "transparent",
-                color: palette.moon,
-                fontFamily: "'Tajawal', sans-serif",
-                fontWeight: 700,
-                fontSize: 13,
-              }}
-            >
-              إنشاء حساب
-            </button>
-          </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{ flex: 1, height: 1, background: `${palette.moon}22` }} />
+              <span style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>أو</span>
+              <div style={{ flex: 1, height: 1, background: `${palette.moon}22` }} />
+            </div>
+          </>
         )}
 
         {mode === "login" && (
@@ -2402,7 +2263,7 @@ function AuthScreen({ onAuthenticated }) {
             <label style={labelStyle}>كلمة المرور</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={fieldStyle} placeholder="••••••••" dir="ltr" />
             <div style={{ textAlign: "left", marginBottom: 14 }}>
-              <button type="button" onClick={() => switchMode("forgot1")} style={linkBtnStyleShared}>
+              <button type="button" onClick={() => switchMode("forgot")} style={linkBtnStyleShared}>
                 نسيت كلمة السر؟
               </button>
             </div>
@@ -2413,7 +2274,7 @@ function AuthScreen({ onAuthenticated }) {
         )}
 
         {mode === "signup" && (
-          <form onSubmit={handleSignupSubmit}>
+          <form onSubmit={handleSignup}>
             {errorBox}
             <label style={labelStyle}>الاسم</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={fieldStyle} placeholder="اسمك الكامل" />
@@ -2424,93 +2285,27 @@ function AuthScreen({ onAuthenticated }) {
             <label style={labelStyle}>تأكيد كلمة المرور</label>
             <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={fieldStyle} placeholder="••••••••" dir="ltr" />
             <button type="submit" disabled={busy} style={submitBtnStyleShared(!busy)}>
-              {busy ? "جارٍ الإرسال..." : "متابعة"}
+              {busy ? "جارٍ الإنشاء..." : "إنشاء حساب"}
             </button>
           </form>
         )}
 
-        {mode === "signupVerify" && (
-          <OtpVerifyStep
-            title="تحقّق من بريدك الإلكتروني"
-            email={pendingEmail}
-            code={pendingCode}
-            value={otpValue}
-            onChange={setOtpValue}
-            onVerify={handleVerifySignupCode}
-            onResend={handleResendSignupCode}
-            onBack={() => switchMode("signup")}
-            busy={busy}
-            error={error}
-            resendSeconds={resendSeconds}
-          />
-        )}
-
-        {mode === "forgot1" && (
-          <form onSubmit={handleForgotStep1}>
+        {mode === "forgot" && (
+          <form onSubmit={handleForgotSubmit}>
             <p style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 14, textAlign: "center" }}>
               استعادة كلمة المرور
             </p>
             {errorBox}
+            {infoBox}
             <label style={labelStyle}>أدخل بريدك الإلكتروني</label>
             <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} style={fieldStyle} placeholder="example@mail.com" dir="ltr" />
             <button type="submit" disabled={busy} style={submitBtnStyleShared(!busy)}>
-              {busy ? "جارٍ الإرسال..." : "إرسال رمز التحقق"}
+              {busy ? "جارٍ الإرسال..." : "إرسال رابط إعادة التعيين"}
             </button>
             <button type="button" onClick={() => switchMode("login")} style={{ ...linkBtnStyleShared, display: "block", margin: "14px auto 0" }}>
               العودة لتسجيل الدخول
             </button>
           </form>
-        )}
-
-        {mode === "forgot2" && (
-          <OtpVerifyStep
-            title="تحقّق من بريدك الإلكتروني"
-            email={pendingEmail}
-            code={pendingCode}
-            value={otpValue}
-            onChange={setOtpValue}
-            onVerify={handleVerifyResetCode}
-            onResend={handleResendResetCode}
-            onBack={() => switchMode("forgot1")}
-            busy={busy}
-            error={error}
-            resendSeconds={resendSeconds}
-          />
-        )}
-
-        {mode === "forgot3" && (
-          <form onSubmit={handleForgotStep3}>
-            <p style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 14, textAlign: "center" }}>
-              كلمة مرور جديدة
-            </p>
-            {errorBox}
-            <label style={labelStyle}>كلمة المرور الجديدة</label>
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={fieldStyle} placeholder="6 أحرف على الأقل" dir="ltr" />
-            <label style={labelStyle}>تأكيد كلمة المرور</label>
-            <input type="password" value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)} style={fieldStyle} placeholder="••••••••" dir="ltr" />
-            <button type="submit" disabled={busy} style={submitBtnStyleShared(!busy)}>
-              {busy ? "جارٍ الحفظ..." : "حفظ كلمة المرور"}
-            </button>
-          </form>
-        )}
-
-        {mode === "forgotDone" && (
-          <div style={{ textAlign: "center" }}>
-            <p style={{ fontSize: 34, marginBottom: 10 }}>✨</p>
-            <p style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 14, marginBottom: 18 }}>
-              تم تغيير كلمة المرور بنجاح
-            </p>
-            <button
-              onClick={() => {
-                switchMode("login");
-                setPassword("");
-                setEmail(pendingEmail);
-              }}
-              style={submitBtnStyleShared(true)}
-            >
-              تسجيل الدخول الآن
-            </button>
-          </div>
         )}
       </div>
     </div>
@@ -2519,13 +2314,14 @@ function AuthScreen({ onAuthenticated }) {
 
 function KhurafaApp() {
   const storageOK = useMemo(() => storageIsAvailable(), []);
-  const idbOK = useMemo(() => !!window.indexedDB, []);
+  const idbOK = useMemo(() => typeof window.File !== "undefined" && typeof window.FileReader !== "undefined", []);
   const persisted = useMemo(() => (storageOK ? loadPersistedState() : null), [storageOK]);
 
-  const [videos, setVideos] = useState(() => (persisted && Array.isArray(persisted.videos) ? persisted.videos : INITIAL_VIDEOS));
+  const [realVideos, setRealVideos] = useState([]);
   const [likedMap, setLikedMap] = useState(() => (persisted && persisted.likedMap) || {});
   const [savedMap, setSavedMap] = useState(() => (persisted && persisted.savedMap) || {});
   const [followMap, setFollowMap] = useState(() => (persisted && persisted.followMap) || {});
+  const [shareBumpMap, setShareBumpMap] = useState({});
   const [burstMap, setBurstMap] = useState({});
   const [commentsMap, setCommentsMap] = useState(() => (persisted && persisted.commentsMap) || SEED_COMMENTS);
   const [commentDraft, setCommentDraft] = useState("");
@@ -2540,14 +2336,63 @@ function KhurafaApp() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newCaption, setNewCaption] = useState("");
   const [sceneIndex, setSceneIndex] = useState(0);
-  const [profileTab, setProfileTab] = useState("saved");
+  const [profileTab, setProfileTab] = useState("posts");
   const [resetArmed, setResetArmed] = useState(false);
   const [pendingVideoFile, setPendingVideoFile] = useState(null);
   const [pendingVideoUrl, setPendingVideoUrl] = useState(null);
   const [publishing, setPublishing] = useState(false);
   const [muted, setMuted] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [session, setSession] = useState(() => loadSession());
+
+  const [authLoading, setAuthLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [followingUids, setFollowingUids] = useState({});
+  const [followersCount, setFollowersCount] = useState(0);
+
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        setSession(null);
+        setAuthLoading(false);
+        return;
+      }
+      const profile = await ensureUserProfile(user).catch(() => null);
+      setSession({
+        uid: user.uid,
+        name: (profile && profile.name) || user.displayName || "مستخدم خُرافة",
+        email: user.email || "",
+      });
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    auth.getRedirectResult().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      setFollowingUids({});
+      setFollowersCount(0);
+      return;
+    }
+    const followingRef = db.ref("following/" + session.uid);
+    const followersRef = db.ref("followers/" + session.uid);
+    const onFollowing = followingRef.on("value", (snap) => setFollowingUids(snap.val() || {}));
+    const onFollowers = followersRef.on("value", (snap) => setFollowersCount(snap.exists() ? Object.keys(snap.val()).length : 0));
+    return () => {
+      followingRef.off("value", onFollowing);
+      followersRef.off("value", onFollowers);
+    };
+  }, [session]);
+
+  useEffect(() => {
+    const unsub = listenVideos((list) => setRealVideos(list));
+    return unsub;
+  }, []);
+
+  const videos = useMemo(() => [...realVideos, ...INITIAL_VIDEOS], [realVideos]);
 
   useEffect(() => {
     const unlockAudio = () => {
@@ -2578,8 +2423,8 @@ function KhurafaApp() {
 
   useEffect(() => {
     if (!storageOK) return;
-    persistState({ videos, likedMap, savedMap, followMap, commentsMap, notifications });
-  }, [storageOK, videos, likedMap, savedMap, followMap, commentsMap, notifications]);
+    persistState({ likedMap, savedMap, followMap, commentsMap, notifications });
+  }, [storageOK, likedMap, savedMap, followMap, commentsMap, notifications]);
 
   const showToast = (msg) => {
     const key = Date.now();
@@ -2643,7 +2488,11 @@ function KhurafaApp() {
         showToast(ok ? "تم نسخ الرابط ✨" : "تعذّر النسخ");
       }
     }
-    setVideos((prev) => prev.map((v) => (v.id === video.id ? { ...v, shares: v.shares + 1 } : v)));
+    if (video.authorUid) {
+      db.ref("videos/" + video.id + "/shares").transaction((cur) => (cur || 0) + 1);
+    } else {
+      setShareBumpMap((m) => ({ ...m, [video.id]: (m[video.id] || 0) + 1 }));
+    }
     setShareOpenId(null);
   };
 
@@ -2684,33 +2533,39 @@ function KhurafaApp() {
   const handlePublish = async () => {
     const text = newCaption.trim();
     if (!text && !pendingVideoFile) return;
+    if (!session) {
+      showToast("سجّل الدخول أولًا للنشر ✨");
+      return;
+    }
     setPublishing(true);
     const scene = SCENE_PRESETS[sceneIndex];
-    const id = Date.now();
-    let hasRealVideo = false;
-    let videoSaved = true;
+    let videoUrl = null;
+    let uploadFailed = false;
 
-    if (pendingVideoFile) {
-      videoSaved = await idbSaveVideo(id, pendingVideoFile);
-      hasRealVideo = videoSaved;
+    try {
+      if (pendingVideoFile) {
+        const tempId = Date.now().toString();
+        videoUrl = await uploadVideoToStorage(session.uid, tempId, pendingVideoFile);
+      }
+
+      const record = {
+        authorUid: session.uid,
+        user: toHandle(session.name),
+        avatar: "🌟",
+        caption: text || "بلا وصف ✨",
+        song: "صوت أصلي — " + session.name,
+        likes: 0,
+        shares: 0,
+        saves: 0,
+        colors: scene.colors,
+        hasRealVideo: !!videoUrl,
+        videoUrl: videoUrl || null,
+      };
+      await publishVideoRecord(record);
+    } catch (err) {
+      uploadFailed = true;
     }
 
-    const newVideo = {
-      id,
-      user: session ? toHandle(session.name) : "ضيف_الأسطورة",
-      avatar: "🌟",
-      caption: text || "بلا وصف ✨",
-      song: "صوت أصلي — " + (session ? session.name : "أنت"),
-      likes: 0,
-      shares: 0,
-      saves: 0,
-      colors: scene.colors,
-      isOwn: true,
-      hasRealVideo,
-    };
-
-    setVideos((prev) => [newVideo, ...prev]);
-    setCommentsMap((m) => ({ ...m, [id]: [] }));
     setPublishing(false);
     setCreateOpen(false);
     handleClearVideo();
@@ -2720,12 +2575,12 @@ function KhurafaApp() {
     setView("feed");
     setActiveIndex(0);
 
-    if (pendingVideoFile && !videoSaved) {
-      showToast("نُشر الفيديو لكن تعذّر حفظه (قد تكون المساحة ممتلئة) ⚠️");
+    if (uploadFailed) {
+      showToast("تعذّر النشر، تحقّق من الاتصال وحاول مجددًا ⚠️");
     } else if (pendingVideoFile) {
-      showToast(storageOK ? "تم نشر فيديوك الحقيقي وحُفظ على جهازك ✨" : "تم نشر الفيديو (لن يُحفظ بعد إغلاق الصفحة)");
+      showToast("تم نشر فيديوك الحقيقي على حسابك ✨");
     } else {
-      showToast(storageOK ? "تم النشر وحُفظ على جهازك ✨" : "تم النشر (لن يُحفظ بعد إغلاق الصفحة) ✨");
+      showToast("تم النشر على حسابك ✨");
     }
   };
 
@@ -2740,23 +2595,37 @@ function KhurafaApp() {
       window.localStorage.removeItem(STORAGE_KEY);
     } catch (e) {}
     idbClearAll();
-    setVideos(INITIAL_VIDEOS);
     setLikedMap({});
     setSavedMap({});
     setFollowMap({});
+    setShareBumpMap({});
     setCommentsMap(SEED_COMMENTS);
     setNotifications(INITIAL_NOTIFICATIONS);
     setResetArmed(false);
-    showToast("تمت إعادة الضبط ✨");
+    showToast("تمت إعادة ضبط التفاعلات المحلية على هذا الجهاز ✨");
   };
 
-  const handleLogout = () => {
-    saveSession(null);
-    setSession(null);
+  const handleToggleRealFollow = async (targetUid) => {
+    if (!session || !targetUid || targetUid === session.uid) return;
+    try {
+      if (followingUids[targetUid]) {
+        await unfollowRealUser(session.uid, targetUid);
+      } else {
+        await followRealUser(session.uid, targetUid);
+      }
+    } catch (e) {
+      showToast("تعذّر تنفيذ العملية، تحقّق من الاتصال ⚠️");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+    } catch (e) {}
     setView("feed");
   };
 
-  const baseList = tab === "following" ? videos.filter((v) => followMap[v.id]) : videos;
+  const baseList = tab === "following" ? videos.filter((v) => (v.authorUid ? !!followingUids[v.authorUid] : !!followMap[v.id])) : videos;
   const feedList = useMemo(() => {
     if (!spotlightId) return baseList;
     const idx = baseList.findIndex((v) => v.id === spotlightId);
@@ -2820,8 +2689,12 @@ function KhurafaApp() {
         .khurafa-feed::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {!session ? (
-        <AuthScreen onAuthenticated={setSession} />
+      {authLoading ? (
+        <div style={{ position: "relative", width: "100%", maxWidth: 480, height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 34 }}>✨</span>
+        </div>
+      ) : !session ? (
+        <AuthScreen />
       ) : (
       <div style={{ position: "relative", width: "100%", maxWidth: 480, height: "100%", overflow: "hidden", background: palette.void }}>
         {view === "feed" && (
@@ -2919,17 +2792,28 @@ function KhurafaApp() {
                 {feedList.map((v, i) => (
                   <VideoCard
                     key={v.id}
-                    video={v}
+                    video={{ ...v, shares: (v.shares || 0) + (shareBumpMap[v.id] || 0) }}
                     liked={!!likedMap[v.id]}
                     saved={!!savedMap[v.id]}
-                    following={!!followMap[v.id]}
+                    following={v.authorUid ? !!followingUids[v.authorUid] : !!followMap[v.id]}
+                    isOwnPost={!!(v.authorUid && session && v.authorUid === session.uid)}
                     active={i === activeIndex}
                     muted={muted}
                     burstKey={burstMap[v.id]}
                     commentsCount={(commentsMap[v.id] || []).length}
                     onHeart={() => handleHeart(v.id)}
                     onDoubleTap={() => handleDoubleTap(v.id)}
-                    onFollow={() => setFollowMap((m) => ({ ...m, [v.id]: !m[v.id] }))}
+                    onFollow={() => {
+                      if (v.authorUid) {
+                        if (!session) {
+                          showToast("سجّل الدخول للمتابعة ✨");
+                          return;
+                        }
+                        handleToggleRealFollow(v.authorUid);
+                      } else {
+                        setFollowMap((m) => ({ ...m, [v.id]: !m[v.id] }));
+                      }
+                    }}
                     onSave={() =>
                       setSavedMap((m) => {
                         const next = !m[v.id];
@@ -2959,6 +2843,9 @@ function KhurafaApp() {
             followMap={followMap}
             onToggleFollow={(id) => setFollowMap((m) => ({ ...m, [id]: !m[id] }))}
             onSelectVideo={handleSelectVideo}
+            followingUids={followingUids}
+            session={session}
+            onToggleRealFollow={handleToggleRealFollow}
           />
         )}
 
@@ -2978,6 +2865,8 @@ function KhurafaApp() {
             onReset={handleResetData}
             session={session}
             onLogout={handleLogout}
+            followingCount={Object.keys(followingUids).length}
+            followersCount={followersCount}
           />
         )}
 
