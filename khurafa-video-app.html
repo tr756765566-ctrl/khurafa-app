@@ -1,0 +1,4399 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0B0618" />
+<title>خُرافة — فيديو خرافي</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0B0618;
+    overflow: hidden;
+  }
+  #root { height: 100%; }
+  #boot-msg {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #F5F0FF; font-family: sans-serif; font-size: 14px; background: #0B0618;
+  }
+</style>
+</head>
+<body>
+<div id="root"><div id="boot-msg">جارٍ تحميل خُرافة ✨</div></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAslZwvzWGaU5Q_RrFg1q5R7-0C78HGk9A",
+    authDomain: "tico-tico-32549.firebaseapp.com",
+    databaseURL: "https://tico-tico-32549-default-rtdb.firebaseio.com",
+    projectId: "tico-tico-32549",
+    storageBucket: "tico-tico-32549.firebasestorage.app",
+    messagingSenderId: "345090719263",
+    appId: "1:345090719263:web:6a239e4ad588924250df2a",
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
+
+<script type="text/plain" id="app-source">
+const { useState, useMemo, useEffect, useRef } = React;
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+function IconBase({ children, style = {}, strokeWidth }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={style.width || 24}
+      height={style.height || 24}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth || 2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ display: "block", flexShrink: 0, ...style }}
+    >
+      {children}
+    </svg>
+  );
+}
+
+const Heart = (props) => (
+  <IconBase {...props}>
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </IconBase>
+);
+
+const MessageCircle = (props) => (
+  <IconBase {...props}>
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+  </IconBase>
+);
+
+const Bookmark = (props) => (
+  <IconBase {...props}>
+    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+  </IconBase>
+);
+
+const Share2 = (props) => (
+  <IconBase {...props}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </IconBase>
+);
+
+const Music2 = (props) => (
+  <IconBase {...props}>
+    <path d="M9 18V5l12-2v13" />
+    <circle cx="6" cy="18" r="3" />
+    <circle cx="18" cy="16" r="3" />
+  </IconBase>
+);
+
+const Search = (props) => (
+  <IconBase {...props}>
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </IconBase>
+);
+
+const Plus = (props) => (
+  <IconBase {...props}>
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </IconBase>
+);
+
+const Home = (props) => (
+  <IconBase {...props}>
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </IconBase>
+);
+
+const Compass = (props) => (
+  <IconBase {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+  </IconBase>
+);
+
+const Inbox = (props) => (
+  <IconBase {...props}>
+    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+  </IconBase>
+);
+
+const User = (props) => (
+  <IconBase {...props}>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </IconBase>
+);
+
+const Sparkles = (props) => (
+  <IconBase {...props}>
+    <path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z" />
+  </IconBase>
+);
+
+const X = (props) => (
+  <IconBase {...props}>
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </IconBase>
+);
+
+const Link2 = (props) => (
+  <IconBase {...props}>
+    <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3" />
+    <path d="M9 17H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3" />
+    <line x1="8" y1="12" x2="16" y2="12" />
+  </IconBase>
+);
+
+const Send = (props) => (
+  <IconBase {...props}>
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </IconBase>
+);
+
+const AtSign = (props) => (
+  <IconBase {...props}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
+  </IconBase>
+);
+
+const TrendingUp = (props) => (
+  <IconBase {...props}>
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+    <polyline points="17 6 23 6 23 12" />
+  </IconBase>
+);
+
+const Bell = (props) => (
+  <IconBase {...props}>
+    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </IconBase>
+);
+
+const Camera = (props) => (
+  <IconBase {...props}>
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
+  </IconBase>
+);
+
+const Trash2 = (props) => (
+  <IconBase {...props}>
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
+  </IconBase>
+);
+
+const Pencil = (props) => (
+  <IconBase {...props}>
+    <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />
+  </IconBase>
+);
+
+const MoreVertical = (props) => (
+  <IconBase {...props}>
+    <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none" />
+  </IconBase>
+);
+
+const Menu = (props) => (
+  <IconBase {...props}>
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </IconBase>
+);
+
+const ChevronLeft = (props) => (
+  <IconBase {...props}>
+    <polyline points="15 18 9 12 15 6" />
+  </IconBase>
+);
+
+const Volume2 = (props) => (
+  <IconBase {...props}>
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+  </IconBase>
+);
+
+const VolumeX = (props) => (
+  <IconBase {...props}>
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <line x1="23" y1="9" x2="17" y2="15" />
+    <line x1="17" y1="9" x2="23" y2="15" />
+  </IconBase>
+);
+
+const Play = (props) => (
+  <IconBase {...props}>
+    <polygon points="6 3 20 12 6 21 6 3" />
+  </IconBase>
+);
+
+
+const palette = {
+  void: "#0B0618",
+  void2: "#170B30",
+  nebula: "#6B2FBF",
+  magenta: "#FF3EA5",
+  cyan: "#4DEEEA",
+  gold: "#FFD166",
+  moon: "#F5F0FF",
+  lilac: "#B9A9DA",
+};
+
+const SCENE_PRESETS = [
+  { label: "أورورا", emoji: "✨", colors: [palette.nebula, palette.magenta, palette.cyan] },
+  { label: "نار", emoji: "🔥", colors: ["#5A1E8C", "#FF7A45", palette.gold] },
+  { label: "غابة", emoji: "🌿", colors: ["#0F3B32", "#2EE6A6", palette.cyan] },
+  { label: "محيط", emoji: "🌊", colors: ["#0B2A4A", palette.cyan, palette.magenta] },
+];
+
+const TAGS = ["أورورا", "تنانين", "غابة_مسحورة", "محيط_متوهج", "قصر_النجوم", "أحلام"];
+
+const INITIAL_VIDEOS = [
+  {
+    id: 1,
+    user: "نجمة_الليل",
+    avatar: "🌙",
+    caption: "الأورورا تهمس بأسرار الليل، وترقص فوق قمم الجليد كل منتصف ليل ✨",
+    song: "همسات الشفق — ريم القمر",
+    likes: 24600,
+    shares: 890,
+    saves: 410,
+    colors: [palette.nebula, palette.magenta, palette.cyan],
+    isOwn: false,
+  },
+  {
+    id: 2,
+    user: "حارس_اللهب",
+    avatar: "🐉",
+    caption: "حين يستيقظ التنين النائم تحت الجبل، تشتعل السماء بالذهب 🔥",
+    song: "زفير التنين — فرقة الرماد",
+    likes: 102000,
+    shares: 2200,
+    saves: 1870,
+    colors: ["#5A1E8C", "#FF7A45", palette.gold],
+    isOwn: false,
+  },
+  {
+    id: 3,
+    user: "ساحرة_الغاب",
+    avatar: "🧚",
+    caption: "في أعماق الغابة المسحورة، الأشجار تحفظ أسرار الأجداد 🌿",
+    song: "نبض الجذور — أورا الخضراء",
+    likes: 8900,
+    shares: 301,
+    saves: 220,
+    colors: ["#0F3B32", "#2EE6A6", palette.cyan],
+    isOwn: false,
+  },
+  {
+    id: 4,
+    user: "عين_المحيط",
+    avatar: "🐚",
+    caption: "توهّج المحيط في منتصف الليل، كائنات مضيئة ترقص مع التيار 🌊",
+    song: "أعماق زرقاء — لُجين",
+    likes: 45200,
+    shares: 975,
+    saves: 640,
+    colors: ["#0B2A4A", palette.cyan, palette.magenta],
+    isOwn: false,
+  },
+  {
+    id: 5,
+    user: "فارس_النجوم",
+    avatar: "⭐",
+    caption: "قصر مبني من ضوء النجوم، بوّاباته لا تُفتح إلا للحالمين 🏰",
+    song: "عرش السماء — قيثارة الفجر",
+    likes: 67300,
+    shares: 1430,
+    saves: 980,
+    colors: [palette.nebula, palette.gold, palette.moon],
+    isOwn: false,
+  },
+  {
+    id: 6,
+    user: "صائدة_الأحلام",
+    avatar: "☁️",
+    caption: "غيمة تحمل أحلامًا ملوّنة، تُمطر توهّجًا بدل المطر 🌈",
+    song: "سُحب اللؤلؤ — نور الفجر",
+    likes: 15400,
+    shares: 512,
+    saves: 333,
+    colors: [palette.nebula, palette.magenta, palette.cyan],
+    isOwn: false,
+  },
+];
+
+const SEED_COMMENTS = {
+  1: [
+    { id: 101, user: "فارس_الضباب", avatar: "🌫️", text: "سحر لا يوصف 😍" },
+    { id: 102, user: "قمر_السهاد", avatar: "🌒", text: "أخذتني بعيدًا فعلاً ✨" },
+  ],
+  2: [
+    { id: 201, user: "ريح_الشرق", avatar: "🍃", text: "رهيب جدًا 🔥🔥" },
+    { id: 202, user: "سيف_الفجر", avatar: "⚔️", text: "أعدت مشاهدته ٥ مرات" },
+  ],
+  3: [
+    { id: 301, user: "ندى_الصباح", avatar: "🌸", text: "الغابة حقيقية ولا خيال؟ 😱" },
+    { id: 302, user: "ورقة_خريف", avatar: "🍂", text: "هدوء يشفي الروح" },
+  ],
+  4: [
+    { id: 401, user: "موج_الليل", avatar: "🌊", text: "المحيط أجمل بكثير هكذا" },
+    { id: 402, user: "لؤلؤة_الشرق", avatar: "🦪", text: "اللقطة الأخيرة خيال!" },
+  ],
+  5: [
+    { id: 501, user: "برق_الغيم", avatar: "⚡", text: "أتمنى أزور هذا القصر فعلاً" },
+    { id: 502, user: "سديم_بعيد", avatar: "🌌", text: "تصميم القصر خرافي" },
+  ],
+  6: [
+    { id: 601, user: "ريشة_طاووس", avatar: "🦚", text: "ألوان أحلام حقيقية" },
+    { id: 602, user: "همسة_ريح", avatar: "🍃", text: "جميل جدًا 🥹" },
+  ],
+};
+
+const INITIAL_NOTIFICATIONS = [
+  { id: 1, avatar: "💜", text: "أعجبت نجمة_الليل بفيديوك الأخير", time: "قبل ٥ دقائق", read: false },
+  { id: 2, avatar: "🐉", text: "بدأ حارس_اللهب بمتابعتك", time: "قبل ساعة", read: false },
+  { id: 3, avatar: "💬", text: 'علّق فارس_النجوم: "قصر ساحر!"', time: "قبل ٣ ساعات", read: false },
+  { id: 4, avatar: "✨", text: "وصل فيديوك إلى ١٠٠٠ إعجاب", time: "أمس", read: true },
+  { id: 5, avatar: "☁️", text: "بدأت صائدة_الأحلام بمتابعتك", time: "قبل يومين", read: true },
+];
+
+function getVideoThumbnail(video) {
+  if (!video || !video.videoUrl) return null;
+  return video.videoUrl.replace(/\.[a-zA-Z0-9]+(\?.*)?$/, ".jpg");
+}
+
+function formatCount(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(n);
+}
+
+function seeded(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function useParticles(seed, count = 14) {
+  return useMemo(() => {
+    return Array.from({ length: count }).map((_, i) => {
+      const r1 = seeded(seed * 97 + i * 13 + 1);
+      const r2 = seeded(seed * 131 + i * 7 + 3);
+      const r3 = seeded(seed * 211 + i * 5 + 9);
+      const r4 = seeded(seed * 53 + i * 19 + 5);
+      return {
+        left: 4 + r1 * 90,
+        delay: r2 * 6,
+        duration: 5 + r3 * 6,
+        size: 2 + r4 * 4,
+      };
+    });
+  }, [seed, count]);
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+const STORAGE_KEY = "khurafa_app_state_v1";
+
+function storageIsAvailable() {
+  try {
+    const k = "__khurafa_probe__";
+    window.localStorage.setItem(k, "1");
+    window.localStorage.removeItem(k);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function loadPersistedState() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") return parsed;
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function persistState(state) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+const IDB_NAME = "khurafa_videos_db";
+const IDB_STORE = "videos";
+
+function openVideoDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      reject(new Error("no-indexeddb"));
+      return;
+    }
+    const req = window.indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE, { keyPath: "id" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbSaveVideo(id, blob) {
+  try {
+    const db = await openVideoDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).put({ id, blob });
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {
+    return false;
+  }
+}
+
+async function idbGetVideo(id) {
+  try {
+    const db = await openVideoDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, "readonly");
+      const req = tx.objectStore(IDB_STORE).get(id);
+      req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+async function idbDeleteVideo(id) {
+  try {
+    const db = await openVideoDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).delete(id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {
+    return false;
+  }
+}
+
+async function idbClearAll() {
+  try {
+    const db = await openVideoDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).clear();
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {
+    return false;
+  }
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function toHandle(name) {
+  return (name || "").trim().replace(/\s+/g, "_");
+}
+
+function translateAuthError(err) {
+  const code = err && err.code ? err.code : "";
+  const map = {
+    "auth/email-already-in-use": "هذا البريد مُسجَّل بحساب بالفعل",
+    "auth/invalid-email": "البريد الإلكتروني غير صحيح",
+    "auth/weak-password": "كلمة المرور ضعيفة، اختر 6 أحرف على الأقل",
+    "auth/user-not-found": "لا يوجد حساب بهذا البريد الإلكتروني",
+    "auth/wrong-password": "كلمة المرور غير صحيحة",
+    "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "auth/too-many-requests": "محاولات كثيرة، حاول لاحقًا",
+    "auth/popup-closed-by-user": "تم إغلاق نافذة تسجيل الدخول",
+    "auth/network-request-failed": "تعذّر الاتصال بالشبكة",
+    "auth/unauthorized-domain": "هذا النطاق غير مُصرَّح له بتسجيل الدخول عبر Google (يلزم إضافته في إعدادات Firebase)",
+  };
+  return map[code] || (err && err.message) || "حدث خطأ غير متوقع";
+}
+
+function generate8DigitId() {
+  return String(Math.floor(10000000 + Math.random() * 90000000));
+}
+
+async function reserveKhurafaId(uid) {
+  for (let i = 0; i < 6; i++) {
+    const candidate = generate8DigitId();
+    const idRef = db.ref("khurafaIds/" + candidate);
+    const result = await idRef.transaction((cur) => (cur === null ? uid : undefined));
+    if (result.committed) return candidate;
+  }
+  return String(Date.now()).slice(-8);
+}
+
+async function ensureUserProfile(user) {
+  const ref = db.ref("users/" + user.uid);
+  const snap = await ref.get();
+  if (!snap.exists()) {
+    const khurafaId = await reserveKhurafaId(user.uid);
+    await ref.set({
+      name: user.displayName || "مستخدم خُرافة",
+      email: user.email || "",
+      khurafaId,
+      photoUrl: null,
+      birthdate: null,
+      lastNameChangeAt: null,
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+    });
+  } else if (!snap.val().khurafaId) {
+    const khurafaId = await reserveKhurafaId(user.uid);
+    await ref.update({ khurafaId });
+  }
+  return (await ref.get()).val();
+}
+
+const NAME_CHANGE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+async function updateUserName(uid, newName) {
+  const ref = db.ref("users/" + uid);
+  const snap = await ref.get();
+  const profile = snap.val() || {};
+  if (profile.lastNameChangeAt && Date.now() - profile.lastNameChangeAt < NAME_CHANGE_COOLDOWN_MS) {
+    const remainMs = NAME_CHANGE_COOLDOWN_MS - (Date.now() - profile.lastNameChangeAt);
+    const remainDays = Math.ceil(remainMs / (24 * 60 * 60 * 1000));
+    throw new Error("يمكنك تغيير الاسم مرة كل 7 أيام. الرجاء الانتظار " + remainDays + " يوم/أيام أخرى");
+  }
+  await ref.update({ name: newName, lastNameChangeAt: firebase.database.ServerValue.TIMESTAMP });
+  if (auth.currentUser) {
+    await auth.currentUser.updateProfile({ displayName: newName }).catch(() => {});
+  }
+}
+
+async function updateUserBirthdate(uid, birthdate) {
+  const ref = db.ref("users/" + uid);
+  const snap = await ref.get();
+  const profile = snap.val() || {};
+  if (profile.birthdate) {
+    throw new Error("تم تعيين تاريخ الميلاد مسبقًا ولا يمكن تغييره");
+  }
+  await ref.update({ birthdate });
+}
+
+async function updateUserPhoto(uid, photoUrl) {
+  await db.ref("users/" + uid).update({ photoUrl });
+}
+
+async function uploadImageToCloudinary(file) {
+  const url = "https://api.cloudinary.com/v1_1/" + CLOUDINARY_CLOUD_NAME + "/image/upload";
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  const res = await withTimeout(fetch(url, { method: "POST", body: formData }), 30000);
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    throw new Error("Cloudinary upload failed (" + res.status + "): " + errBody);
+  }
+  const data = await res.json();
+  if (!data.secure_url) throw new Error("Cloudinary response missing secure_url");
+  return data.secure_url;
+}
+
+async function deleteVideoRecord(video) {
+  await db.ref("videos/" + video.id).remove();
+  if (!video.videoUrl) {
+    await idbDeleteVideo(video.id).catch(() => {});
+  }
+}
+
+async function fetchUserProfile(uid) {
+  try {
+    const snap = await db.ref("users/" + uid).get();
+    return snap.exists() ? snap.val() : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function fetchFollowCounts(uid) {
+  try {
+    const [followingSnap, followersSnap] = await Promise.all([db.ref("following/" + uid).get(), db.ref("followers/" + uid).get()]);
+    return {
+      followingCount: followingSnap.exists() ? Object.keys(followingSnap.val()).length : 0,
+      followersCount: followersSnap.exists() ? Object.keys(followersSnap.val()).length : 0,
+    };
+  } catch (e) {
+    return { followingCount: 0, followersCount: 0 };
+  }
+}
+
+async function fetchFollowList(uid, mode) {
+  try {
+    const snap = await db.ref((mode === "followers" ? "followers/" : "following/") + uid).get();
+    if (!snap.exists()) return [];
+    const uids = Object.keys(snap.val());
+    const profiles = await Promise.all(
+      uids.map(async (u) => {
+        const p = await fetchUserProfile(u);
+        return p ? { uid: u, ...p } : { uid: u, name: "مستخدم خُرافة", khurafaId: "" };
+      })
+    );
+    return profiles;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function lookupUserByKhurafaId(id) {
+  try {
+    const idSnap = await db.ref("khurafaIds/" + id).get();
+    if (!idSnap.exists()) return null;
+    const uid = idSnap.val();
+    const profile = await fetchUserProfile(uid);
+    return profile ? { uid, ...profile } : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function bumpVideoCounter(videoId, field, delta) {
+  await db.ref("videos/" + videoId + "/" + field).transaction((cur) => Math.max(0, (cur || 0) + delta));
+}
+
+async function setLikeState(uid, videoId, liked) {
+  const updates = {};
+  updates["likes/" + uid + "/" + videoId] = liked ? true : null;
+  await db.ref().update(updates);
+  await bumpVideoCounter(videoId, "likes", liked ? 1 : -1);
+}
+
+async function setSaveState(uid, videoId, saved) {
+  const updates = {};
+  updates["saves/" + uid + "/" + videoId] = saved ? true : null;
+  await db.ref().update(updates);
+  await bumpVideoCounter(videoId, "saves", saved ? 1 : -1);
+}
+
+async function followRealUser(myUid, targetUid) {
+  const updates = {};
+  updates["following/" + myUid + "/" + targetUid] = true;
+  updates["followers/" + targetUid + "/" + myUid] = true;
+  await db.ref().update(updates);
+}
+
+async function unfollowRealUser(myUid, targetUid) {
+  const updates = {};
+  updates["following/" + myUid + "/" + targetUid] = null;
+  updates["followers/" + targetUid + "/" + myUid] = null;
+  await db.ref().update(updates);
+}
+
+function listenVideos(onChange) {
+  const ref = db.ref("videos").orderByChild("createdAt");
+  const handler = ref.on("value", (snap) => {
+    const list = [];
+    snap.forEach((child) => {
+      list.push({ id: child.key, ...child.val() });
+    });
+    list.reverse();
+    onChange(list);
+  });
+  return () => ref.off("value", handler);
+}
+
+async function publishVideoRecord(record) {
+  const ref = db.ref("videos").push();
+  const data = { ...record, id: ref.key, createdAt: firebase.database.ServerValue.TIMESTAMP };
+  await ref.set(data);
+  return ref.key;
+}
+
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("timeout: استغرقت العملية وقتًا طويلًا")), ms);
+    promise.then(
+      (v) => {
+        window.clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        window.clearTimeout(timer);
+        reject(e);
+      }
+    );
+  });
+}
+
+const CLOUDINARY_CLOUD_NAME = "cijla7i8";
+const CLOUDINARY_UPLOAD_PRESET = "khurafa_uploads";
+
+async function uploadVideoToStorage(uid, videoId, file) {
+  const url = "https://api.cloudinary.com/v1_1/" + CLOUDINARY_CLOUD_NAME + "/video/upload";
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  formData.append("public_id", uid + "_" + videoId);
+
+  const res = await withTimeout(fetch(url, { method: "POST", body: formData }), 30000);
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    throw new Error("Cloudinary upload failed (" + res.status + "): " + errBody);
+  }
+  const data = await res.json();
+  if (!data.secure_url) {
+    throw new Error("Cloudinary response missing secure_url");
+  }
+  return data.secure_url;
+}
+
+const SPARKLES = [
+  { tx: 60, ty: -70, delay: 0 },
+  { tx: -60, ty: -70, delay: 0.05 },
+  { tx: 80, ty: 10, delay: 0.1 },
+  { tx: -80, ty: 10, delay: 0.08 },
+  { tx: 30, ty: 80, delay: 0.12 },
+  { tx: -30, ty: 80, delay: 0.03 },
+];
+
+function ActionButton({ icon, label, active, activeColor, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: 0,
+        margin: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        gap: 2,
+      }}
+    >
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: active ? "rgba(255,255,255,0.08)" : "transparent",
+        }}
+      >
+        {React.cloneElement(icon, {
+          style: {
+            width: 27,
+            height: 27,
+            color: active ? activeColor : palette.moon,
+            fill: active ? activeColor : "none",
+            filter: active ? `drop-shadow(0 0 6px ${activeColor})` : "none",
+            transition: "all 0.2s ease",
+          },
+        })}
+      </div>
+      <span
+        style={{
+          color: palette.moon,
+          fontSize: 12,
+          fontWeight: 700,
+          fontFamily: "'Tajawal', sans-serif",
+          textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+        }}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
+function RealVideoLayer({ videoId, remoteUrl, playRequested, muted }) {
+  const [url, setUrl] = useState(remoteUrl || null);
+  const [failed, setFailed] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const videoRef = useRef(null);
+  const bgVideoRef = useRef(null);
+
+  useEffect(() => {
+    if (remoteUrl) {
+      setUrl(remoteUrl);
+      return;
+    }
+    let objectUrl = null;
+    let cancelled = false;
+    idbGetVideo(videoId).then((blob) => {
+      if (cancelled) return;
+      if (blob) {
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      } else {
+        setFailed(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [videoId, remoteUrl]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    const bg = bgVideoRef.current;
+    if (!v) return;
+    if (playRequested) {
+      const p = v.play();
+      if (p && p.catch) p.catch(() => {});
+      if (bg) {
+        const p2 = bg.play();
+        if (p2 && p2.catch) p2.catch(() => {});
+      }
+    } else {
+      v.pause();
+      if (bg) bg.pause();
+    }
+  }, [playRequested, url, isLandscape]);
+
+  const handleLoadedMetadata = (e) => {
+    const el = e.target;
+    if (el.videoWidth && el.videoHeight) {
+      setIsLandscape(el.videoWidth > el.videoHeight * 1.05);
+    }
+  };
+
+  const handleTimeUpdate = (e) => {
+    const el = e.target;
+    if (el.duration) setProgress(el.currentTime / el.duration);
+  };
+
+  const handleSeek = (e) => {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v || !v.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    v.currentTime = ratio * v.duration;
+    setProgress(ratio);
+  };
+
+  if (failed) {
+    return (
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: palette.void2 }}>
+        <span style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5 }}>تعذّر تحميل الفيديو</span>
+      </div>
+    );
+  }
+
+  if (!url) {
+    return (
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: palette.void2 }}>
+        <span style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5 }}>جارٍ تحميل الفيديو ✨</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
+      {isLandscape && (
+        <video
+          ref={bgVideoRef}
+          src={url}
+          muted
+          loop
+          playsInline
+          webkit-playsinline="true"
+          tabIndex={-1}
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            filter: "blur(38px) brightness(0.5) saturate(1.3)",
+            transform: "scale(1.2)",
+          }}
+        />
+      )}
+      <video
+        ref={videoRef}
+        src={url}
+        muted={muted}
+        loop
+        playsInline
+        webkit-playsinline="true"
+        onLoadedMetadata={handleLoadedMetadata}
+        onTimeUpdate={handleTimeUpdate}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: isLandscape ? "contain" : "cover",
+        }}
+      />
+      <div
+        onClick={handleSeek}
+        style={{ position: "absolute", left: 0, right: 0, bottom: 76, height: 16, zIndex: 17, display: "flex", alignItems: "flex-end", direction: "ltr", cursor: "pointer" }}
+      >
+        <div style={{ width: "100%", height: 3, background: "rgba(255,255,255,0.22)" }}>
+          <div
+            style={{
+              height: "100%",
+              width: `${Math.round(progress * 100)}%`,
+              background: `linear-gradient(90deg, ${palette.magenta}, ${palette.gold})`,
+              boxShadow: `0 0 6px ${palette.magenta}`,
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VideoCard({
+  video,
+  liked,
+  saved,
+  following,
+  isOwnPost,
+  active,
+  muted,
+  burstKey,
+  commentsCount,
+  onHeart,
+  onDoubleTap,
+  onFollow,
+  onSave,
+  onOpenComments,
+  onOpenShare,
+  onOpenSound,
+  onUnmuteOnPlay,
+  onOpenProfile,
+}) {
+  const particles = useParticles(video.id);
+  const [c1, c2, c3] = video.colors;
+  const hasReal = !!video.hasRealVideo;
+  const [manualPaused, setManualPaused] = useState(false);
+  const tapTimerRef = useRef(null);
+  const touchStartRef = useRef(null);
+  const swipedRef = useRef(false);
+
+  useEffect(() => {
+    if (active) setManualPaused(false);
+  }, [active]);
+
+  useEffect(() => {
+    return () => {
+      if (tapTimerRef.current) window.clearTimeout(tapTimerRef.current);
+    };
+  }, []);
+
+  const handleSingleTap = () => {
+    if (!hasReal) return;
+    setManualPaused((p) => {
+      const next = !p;
+      if (!next) onUnmuteOnPlay();
+      return next;
+    });
+  };
+
+  const handleTapZoneClick = () => {
+    if (swipedRef.current) {
+      swipedRef.current = false;
+      return;
+    }
+    if (tapTimerRef.current) {
+      window.clearTimeout(tapTimerRef.current);
+      tapTimerRef.current = null;
+      onDoubleTap();
+    } else {
+      tapTimerRef.current = window.setTimeout(() => {
+        tapTimerRef.current = null;
+        handleSingleTap();
+      }, 260);
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleTouchEnd = (e) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (dx < -60 && Math.abs(dy) < 50) {
+      swipedRef.current = true;
+      onOpenProfile();
+    }
+  };
+
+  const playRequested = !!active && !manualPaused;
+
+  return (
+    <section
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        scrollSnapAlign: "start",
+        scrollSnapStop: "always",
+        overflow: "hidden",
+        flexShrink: 0,
+        background: `linear-gradient(165deg, ${c1} 0%, ${palette.void} 55%, ${c3} 100%)`,
+      }}
+    >
+      {hasReal ? <RealVideoLayer videoId={video.id} remoteUrl={video.videoUrl} playRequested={playRequested} muted={muted} /> : null}
+
+      <div
+        style={{
+          position: "absolute",
+          top: "-10%",
+          left: "-20%",
+          width: "80%",
+          height: "60%",
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${c2} 0%, transparent 70%)`,
+          filter: "blur(50px)",
+          opacity: hasReal ? 0.22 : 0.55,
+          mixBlendMode: "screen",
+          animation: "auroraDrift 9s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-15%",
+          right: "-15%",
+          width: "70%",
+          height: "55%",
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${c1} 0%, transparent 70%)`,
+          filter: "blur(60px)",
+          opacity: hasReal ? 0.2 : 0.5,
+          mixBlendMode: "screen",
+          animation: "auroraDrift 12s ease-in-out infinite reverse",
+        }}
+      />
+
+      <div onClick={handleTapZoneClick} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ position: "absolute", inset: 0, zIndex: 8 }} />
+
+      {hasReal && manualPaused && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 9, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "rgba(11,6,24,0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: `1px solid ${palette.moon}33`,
+            }}
+          >
+            <Play style={{ width: 26, height: 26, color: palette.moon, fill: palette.moon, marginLeft: 4 }} />
+          </div>
+        </div>
+      )}
+
+      {particles.map((p, i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            left: `${p.left}%`,
+            bottom: "-5%",
+            width: p.size,
+            height: p.size,
+            borderRadius: "50%",
+            background: palette.gold,
+            boxShadow: `0 0 6px 1px ${palette.gold}`,
+            animation: `rise ${p.duration}s linear ${p.delay}s infinite`,
+            pointerEvents: "none",
+          }}
+        />
+      ))}
+
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(to top, rgba(5,2,12,0.85) 0%, rgba(5,2,12,0.15) 38%, transparent 60%), linear-gradient(to bottom, rgba(5,2,12,0.55) 0%, transparent 22%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {burstKey ? (
+        <div
+          key={burstKey}
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          <Heart
+            style={{
+              width: 90,
+              height: 90,
+              color: palette.magenta,
+              fill: palette.magenta,
+              filter: `drop-shadow(0 0 20px ${palette.magenta})`,
+              animation: "burstHeart 0.8s ease-out forwards",
+            }}
+          />
+          {SPARKLES.map((s, i) => (
+            <Sparkles
+              key={i}
+              style={{
+                position: "absolute",
+                width: 20,
+                height: 20,
+                color: palette.gold,
+                top: "50%",
+                left: "50%",
+                "--tx": `${s.tx}px`,
+                "--ty": `${s.ty}px`,
+                animation: `sparkleOut 0.8s ease-out ${s.delay}s forwards`,
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      <div
+        style={{
+          position: "absolute",
+          left: 12,
+          bottom: "100px",
+          zIndex: 15,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 18,
+        }}
+      >
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={onOpenProfile}
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "block" }}
+          >
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: "50%",
+                padding: 2,
+                background: `conic-gradient(${palette.magenta}, ${palette.gold}, ${palette.cyan}, ${palette.magenta})`,
+                animation: following ? "none" : "portalPulse 2.4s ease-in-out infinite",
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "50%",
+                  background: palette.void2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 20,
+                }}
+              >
+                {video.avatar}
+              </div>
+            </div>
+          </button>
+          {!following && !isOwnPost && (
+            <button
+              onClick={onFollow}
+              style={{
+                position: "absolute",
+                bottom: -6,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                background: palette.magenta,
+                border: "none",
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: `0 0 6px ${palette.magenta}`,
+                cursor: "pointer",
+              }}
+            >
+              <Plus style={{ width: 12, height: 12, color: palette.moon }} strokeWidth={3} />
+            </button>
+          )}
+        </div>
+
+        <ActionButton
+          icon={<Heart />}
+          label={formatCount(video.authorUid ? video.likes : video.likes + (liked ? 1 : 0))}
+          active={liked}
+          activeColor={palette.magenta}
+          onClick={onHeart}
+        />
+        <ActionButton
+          icon={<MessageCircle />}
+          label={formatCount(commentsCount)}
+          activeColor={palette.cyan}
+          onClick={onOpenComments}
+        />
+        <ActionButton
+          icon={<Bookmark />}
+          label={formatCount(video.authorUid ? video.saves : video.saves + (saved ? 1 : 0))}
+          active={saved}
+          activeColor={palette.gold}
+          onClick={onSave}
+        />
+        <ActionButton
+          icon={<Share2 />}
+          label={formatCount(video.shares)}
+          activeColor={palette.cyan}
+          onClick={onOpenShare}
+        />
+
+        <button onClick={onOpenSound} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+          <div
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: "50%",
+              background: `conic-gradient(${palette.void}, ${c2}, ${palette.void})`,
+              border: `2px solid ${palette.moon}22`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "spinSlow 5s linear infinite",
+            }}
+          >
+            <Music2 style={{ width: 16, height: 16, color: palette.moon }} />
+          </div>
+        </button>
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          right: 16,
+          left: 96,
+          bottom: "104px",
+          zIndex: 15,
+          textAlign: "right",
+          direction: "rtl",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-start" }}>
+          <span
+            style={{
+              color: palette.moon,
+              fontFamily: "'Baloo Bhaijaan 2', sans-serif",
+              fontWeight: 700,
+              fontSize: 16,
+              textShadow: "0 1px 6px rgba(0,0,0,0.6)",
+            }}
+          >
+            @{video.user}
+          </span>
+          <Sparkles style={{ width: 14, height: 14, color: palette.gold }} />
+        </div>
+        <p
+          style={{
+            color: palette.moon,
+            fontFamily: "'Tajawal', sans-serif",
+            fontSize: 14,
+            lineHeight: 1.5,
+            marginTop: 6,
+            marginBottom: 8,
+            textShadow: "0 1px 6px rgba(0,0,0,0.6)",
+          }}
+        >
+          {video.caption}
+        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-start" }}>
+          <span
+            style={{
+              color: palette.lilac,
+              fontFamily: "'Tajawal', sans-serif",
+              fontSize: 12.5,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: 220,
+            }}
+          >
+            {video.song}
+          </span>
+          <Music2 style={{ width: 13, height: 13, color: palette.lilac, flexShrink: 0 }} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function VideoFeedScroller({
+  list,
+  activeIndex,
+  onScrollIndex,
+  paused,
+  likedMap,
+  savedMap,
+  followMap,
+  followingUids,
+  realLikedIds,
+  realSavedIds,
+  session,
+  muted,
+  burstMap,
+  commentsMap,
+  shareBumpMap,
+  onHeart,
+  onDoubleTap,
+  onToggleFollow,
+  onToggleSave,
+  onOpenComments,
+  onOpenShare,
+  onOpenSound,
+  onUnmuteOnPlay,
+  onOpenProfile,
+}) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const target = Math.min(activeIndex, list.length - 1);
+    if (target > 0 && el.clientHeight) {
+      el.scrollTop = target * el.clientHeight;
+    }
+    // Only restore position on mount; ongoing scroll is handled by onScroll below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="khurafa-feed"
+      onScroll={(e) => {
+        const el = e.currentTarget;
+        if (!el.clientHeight) return;
+        const idx = Math.round(el.scrollTop / el.clientHeight);
+        onScrollIndex(idx);
+      }}
+      style={{ position: "absolute", inset: 0, overflowY: "scroll", scrollSnapType: "y mandatory", scrollBehavior: "smooth" }}
+    >
+      {list.map((v, i) => (
+        <VideoCard
+          key={v.id}
+          video={{ ...v, shares: (v.shares || 0) + (shareBumpMap[v.id] || 0) }}
+          liked={v.authorUid ? !!realLikedIds[v.id] : !!likedMap[v.id]}
+          saved={v.authorUid ? !!realSavedIds[v.id] : !!savedMap[v.id]}
+          following={v.authorUid ? !!followingUids[v.authorUid] : !!followMap[v.id]}
+          isOwnPost={!!(v.authorUid && session && v.authorUid === session.uid)}
+          active={i === activeIndex && !paused}
+          muted={muted}
+          burstKey={burstMap[v.id]}
+          commentsCount={(commentsMap[v.id] || []).length}
+          onHeart={() => onHeart(v.id)}
+          onDoubleTap={() => onDoubleTap(v.id)}
+          onFollow={() => onToggleFollow(v)}
+          onSave={() => onToggleSave(v)}
+          onOpenComments={() => onOpenComments(v.id)}
+          onOpenShare={() => onOpenShare(v.id)}
+          onOpenSound={() => onOpenSound(v)}
+          onUnmuteOnPlay={onUnmuteOnPlay}
+          onOpenProfile={() => onOpenProfile(v.authorUid)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function CommentsDrawer({ comments, draft, onDraftChange, onSubmit, onClose }) {
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "flex-end" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(4,2,10,0.6)" }} />
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "64%",
+          background: palette.void2,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 -10px 40px rgba(0,0,0,0.5)",
+          animation: "slideUp 0.25s ease-out",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "14px 16px",
+            borderBottom: `1px solid ${palette.moon}14`,
+            direction: "rtl",
+          }}
+        >
+          <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 700, fontSize: 14 }}>
+            التعليقات ({comments.length})
+          </span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+            <X style={{ width: 18, height: 18, color: palette.lilac }} />
+          </button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 14, direction: "rtl" }}>
+          {comments.length === 0 && (
+            <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, textAlign: "center", marginTop: 30 }}>
+              كن أول من يعلّق بكلمة سحرية ✨
+            </p>
+          )}
+          {comments.map((c) => (
+            <div key={c.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: "rgba(255,255,255,0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 15,
+                  flexShrink: 0,
+                }}
+              >
+                {c.avatar}
+              </div>
+              <div>
+                <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, fontWeight: 700 }}>{c.user}</div>
+                <div style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, lineHeight: 1.4 }}>{c.text}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            padding: "10px 14px",
+            paddingBottom: "14px",
+            borderTop: `1px solid ${palette.moon}14`,
+            direction: "rtl",
+          }}
+        >
+          <input
+            value={draft}
+            onChange={(e) => onDraftChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onSubmit();
+            }}
+            placeholder="أضف تعليقًا سحريًا..."
+            style={{
+              flex: 1,
+              background: "rgba(255,255,255,0.07)",
+              border: `1px solid ${palette.moon}22`,
+              borderRadius: 999,
+              padding: "10px 16px",
+              color: palette.moon,
+              fontFamily: "'Tajawal', sans-serif",
+              fontSize: 13,
+              outline: "none",
+            }}
+          />
+          <button
+            onClick={onSubmit}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: "50%",
+              flexShrink: 0,
+              border: "none",
+              cursor: "pointer",
+              background: draft.trim() ? `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})` : "rgba(255,255,255,0.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Send style={{ width: 16, height: 16, color: palette.moon }} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShareDrawer({ onClose, onAction, canDelete, onDelete }) {
+  const items = [
+    { key: "copy", label: "نسخ الرابط", icon: <Link2 /> },
+    { key: "whatsapp", label: "واتساب", icon: <Send /> },
+    { key: "twitter", label: "X", icon: <AtSign /> },
+    { key: "native", label: "المزيد", icon: <Share2 /> },
+  ];
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "flex-end" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(4,2,10,0.6)" }} />
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          background: palette.void2,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: "14px 16px",
+          paddingBottom: "20px",
+          animation: "slideUp 0.25s ease-out",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, direction: "rtl" }}>
+          <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 700, fontSize: 14 }}>مشاركة اللحظة</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+            <X style={{ width: 18, height: 18, color: palette.lilac }} />
+          </button>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-around" }}>
+          {items.map((it) => (
+            <button
+              key={it.key}
+              onClick={() => onAction(it.key)}
+              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
+            >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {React.cloneElement(it.icon, { style: { width: 20, height: 20, color: palette.moon } })}
+              </div>
+              <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>{it.label}</span>
+            </button>
+          ))}
+          {canDelete && (
+            <button
+              onClick={onDelete}
+              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
+            >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: "rgba(255,62,90,0.18)",
+                  border: "1px solid rgba(255,62,90,0.4)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Trash2 style={{ width: 20, height: 20, color: "#FF3E5A" }} />
+              </div>
+              <span style={{ color: "#FF3E5A", fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>حذف</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, onCancel }) {
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div onClick={onCancel} style={{ position: "absolute", inset: 0, background: "rgba(4,2,10,0.72)", backdropFilter: "blur(2px)" }} />
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: 320,
+          background: palette.void2,
+          borderRadius: 20,
+          padding: 22,
+          border: `1px solid ${palette.moon}18`,
+          direction: "rtl",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            margin: "0 auto 14px",
+            borderRadius: "50%",
+            background: danger ? "rgba(255,62,90,0.15)" : `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 20,
+          }}
+        >
+          {danger ? "⚠️" : "✨"}
+        </div>
+        <p style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontWeight: 700, fontSize: 15.5, marginBottom: 8 }}>{title}</p>
+        <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>{message}</p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              padding: "11px 0",
+              borderRadius: 999,
+              border: `1px solid ${palette.moon}33`,
+              background: "transparent",
+              color: palette.moon,
+              fontFamily: "'Tajawal', sans-serif",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+          >
+            إلغاء
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              flex: 1,
+              padding: "11px 0",
+              borderRadius: 999,
+              border: "none",
+              background: danger ? "#FF3E5A" : `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+              color: palette.moon,
+              fontFamily: "'Tajawal', sans-serif",
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateModal({
+  caption,
+  onCaptionChange,
+  onClose,
+  onPublish,
+  videoUrl,
+  onFileSelected,
+  onClearVideo,
+  idbOK,
+  publishing,
+}) {
+  const fileInputRef = useRef(null);
+  const canPublish = !publishing && (caption.trim() || videoUrl);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 50, background: palette.void, direction: "rtl", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 6px", flexShrink: 0 }}>
+        <button onClick={publishing ? undefined : onClose} style={{ background: "none", border: "none", cursor: publishing ? "not-allowed" : "pointer", padding: 4 }}>
+          <X style={{ width: 21, height: 21, color: palette.moon }} />
+        </button>
+        <span style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontWeight: 700, fontSize: 15 }}>لحظة جديدة</span>
+        <div style={{ width: 29 }} />
+      </div>
+
+      <input ref={fileInputRef} type="file" accept="video/*" onChange={onFileSelected} style={{ display: "none" }} />
+
+      <div style={{ flex: 1, overflowY: "auto", padding: "18px 16px" }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 22 }}>
+          {videoUrl ? (
+            <div style={{ position: "relative", width: 108, height: 152, borderRadius: 14, overflow: "hidden", background: "#000", flexShrink: 0 }}>
+              <video src={videoUrl} muted loop autoPlay playsInline style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <button
+                onClick={onClearVideo}
+                style={{
+                  position: "absolute",
+                  top: 6,
+                  left: 6,
+                  background: "rgba(4,2,10,0.75)",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: 24,
+                  height: 24,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <X style={{ width: 12, height: 12, color: palette.moon }} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => idbOK && fileInputRef.current && fileInputRef.current.click()}
+              disabled={!idbOK}
+              style={{
+                width: 108,
+                height: 152,
+                borderRadius: 14,
+                flexShrink: 0,
+                border: `1.5px dashed ${palette.moon}33`,
+                background: "rgba(255,255,255,0.05)",
+                cursor: idbOK ? "pointer" : "not-allowed",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                opacity: idbOK ? 1 : 0.5,
+                padding: 10,
+              }}
+            >
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Camera style={{ width: 17, height: 17, color: palette.moon }} />
+              </div>
+              <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.4 }}>
+                {idbOK ? "سجّل أو اختر فيديو" : "غير مدعوم هنا"}
+              </span>
+            </button>
+          )}
+
+          <textarea
+            value={caption}
+            onChange={(e) => onCaptionChange(e.target.value)}
+            placeholder="بم تحلم الليلة؟ صف مشهدك الخرافي..."
+            style={{
+              flex: 1,
+              boxSizing: "border-box",
+              resize: "none",
+              background: "rgba(255,255,255,0.06)",
+              border: `1px solid ${palette.moon}18`,
+              borderRadius: 14,
+              padding: 12,
+              color: palette.moon,
+              fontFamily: "'Tajawal', sans-serif",
+              fontSize: 13.5,
+              outline: "none",
+              height: 152,
+            }}
+          />
+        </div>
+      </div>
+
+      <div style={{ padding: "12px 16px", paddingBottom: "26px", flexShrink: 0, borderTop: `1px solid ${palette.moon}12` }}>
+        <button
+          onClick={onPublish}
+          disabled={!canPublish}
+          style={{
+            width: "100%",
+            padding: "13px 0",
+            borderRadius: 999,
+            border: "none",
+            cursor: canPublish ? "pointer" : "not-allowed",
+            background: canPublish ? `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})` : "rgba(255,255,255,0.1)",
+            color: palette.moon,
+            fontFamily: "'Tajawal', sans-serif",
+            fontWeight: 800,
+            fontSize: 14.5,
+            opacity: canPublish ? 1 : 0.5,
+          }}
+        >
+          {publishing ? "جارٍ النشر..." : "نشر"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DiscoverView({ query, onQueryChange, videos, followMap, onToggleFollow, onSelectVideo, followingUids, session, onToggleRealFollow, onNavigateToUser }) {
+  const trimmed = query.trim();
+  const [searchTab, setSearchTab] = useState("all");
+  const [personResult, setPersonResult] = useState(null);
+  const [personLoading, setPersonLoading] = useState(false);
+  const [enrichedUsers, setEnrichedUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+
+  useEffect(() => {
+    if (!/^\d{8}$/.test(trimmed)) {
+      setPersonResult(null);
+      setPersonLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setPersonLoading(true);
+    lookupUserByKhurafaId(trimmed).then((res) => {
+      if (!cancelled) {
+        setPersonResult(res);
+        setPersonLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [trimmed]);
+
+  const videoResults = trimmed
+    ? videos.filter((v) => (v.caption + " " + v.user + " " + v.song + " " + (v.authorKhurafaId || "")).indexOf(trimmed) !== -1)
+    : [];
+
+  useEffect(() => {
+    if (!trimmed) {
+      setEnrichedUsers([]);
+      return;
+    }
+    const authorsByUid = {};
+    videos.forEach((v) => {
+      if (v.authorUid && !authorsByUid[v.authorUid]) {
+        authorsByUid[v.authorUid] = { uid: v.authorUid, user: v.user, khurafaId: v.authorKhurafaId || "" };
+      }
+    });
+    const matches = Object.values(authorsByUid).filter((a) => a.user.indexOf(trimmed) !== -1 || (a.khurafaId && a.khurafaId.indexOf(trimmed) !== -1));
+    if (matches.length === 0) {
+      setEnrichedUsers([]);
+      return;
+    }
+    let cancelled = false;
+    setUsersLoading(true);
+    Promise.all(
+      matches.map(async (m) => {
+        const p = await fetchUserProfile(m.uid);
+        return {
+          uid: m.uid,
+          user: p ? toHandle(p.name) : m.user,
+          photoUrl: p ? p.photoUrl : null,
+          khurafaId: (p && p.khurafaId) || m.khurafaId,
+        };
+      })
+    ).then((res) => {
+      if (!cancelled) {
+        setEnrichedUsers(res);
+        setUsersLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [trimmed, videos]);
+
+  let userResults = enrichedUsers;
+  if (personResult) {
+    userResults = [
+      {
+        uid: personResult.uid,
+        user: toHandle(personResult.name),
+        photoUrl: personResult.photoUrl,
+        khurafaId: personResult.khurafaId,
+      },
+      ...userResults.filter((u) => u.uid !== personResult.uid),
+    ];
+  }
+
+  const UserRow = (u) => {
+    const isSelf = session && u.uid === session.uid;
+    const isFollowing = !!followingUids[u.uid];
+    return (
+      <button
+        key={u.uid}
+        onClick={() => onNavigateToUser(u.uid)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "rgba(255,255,255,0.05)",
+          border: "none",
+          borderRadius: 14,
+          padding: 10,
+          cursor: "pointer",
+          textAlign: "right",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              background: palette.void2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 18,
+              overflow: "hidden",
+              flexShrink: 0,
+            }}
+          >
+            {u.photoUrl ? <img src={u.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : u.avatar || "🌟"}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 700, fontSize: 13.5 }}>@{u.user}</span>
+            {u.khurafaId && (
+              <span style={{ color: palette.gold, fontFamily: "'Tajawal', sans-serif", fontSize: 10.5, direction: "ltr", textAlign: "right" }}>
+                خُرافة ID: {u.khurafaId}
+              </span>
+            )}
+          </div>
+        </div>
+        {!isSelf && (
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!session) return;
+              onToggleRealFollow(u.uid);
+            }}
+            style={{
+              background: isFollowing ? "transparent" : `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+              border: isFollowing ? `1px solid ${palette.moon}44` : "none",
+              borderRadius: 999,
+              padding: "6px 16px",
+              color: palette.moon,
+              fontFamily: "'Tajawal', sans-serif",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {isFollowing ? "متابَع" : "متابعة"}
+          </span>
+        )}
+      </button>
+    );
+  };
+
+  const VideoRow = (v) => {
+    const thumb = getVideoThumbnail(v);
+    return (
+      <button
+        key={v.id}
+        onClick={() => onSelectVideo(v.id, videoResults)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          background: "rgba(255,255,255,0.06)",
+          border: "none",
+          borderRadius: 14,
+          padding: 10,
+          cursor: "pointer",
+          textAlign: "right",
+        }}
+      >
+        <div style={{ position: "relative", width: 52, height: 70, borderRadius: 10, flexShrink: 0, overflow: "hidden", background: `linear-gradient(160deg, ${v.colors[0]}, ${v.colors[2]})` }}>
+          {thumb && (
+            <img
+              src={thumb}
+              alt=""
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          )}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, overflow: "hidden" }}>
+          <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 700, fontSize: 13 }}>@{v.user}</span>
+          <span style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {v.caption}
+          </span>
+        </div>
+      </button>
+    );
+  };
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflowY: "auto", paddingBottom: 90, direction: "rtl" }}>
+      <div style={{ paddingTop: "16px", paddingLeft: 16, paddingRight: 16 }}>
+        <h1 style={{ fontFamily: "'Baloo Bhaijaan 2', sans-serif", color: palette.moon, fontSize: 20, fontWeight: 700, marginBottom: 14 }}>
+          استكشاف
+        </h1>
+        <div style={{ position: "relative", marginBottom: trimmed ? 14 : 20 }}>
+          <input
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+            placeholder="ابحث عن عالم سحري..."
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              background: "rgba(255,255,255,0.07)",
+              border: `1px solid ${palette.moon}22`,
+              borderRadius: 999,
+              padding: "10px 42px 10px 16px",
+              color: palette.moon,
+              fontFamily: "'Tajawal', sans-serif",
+              fontSize: 14,
+              outline: "none",
+            }}
+          />
+          <Search style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", width: 17, height: 17, color: palette.lilac }} />
+          {trimmed && (
+            <button
+              onClick={() => onQueryChange("")}
+              style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 4 }}
+            >
+              <X style={{ width: 15, height: 15, color: palette.lilac }} />
+            </button>
+          )}
+        </div>
+
+        {!trimmed && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+              <TrendingUp style={{ width: 15, height: 15, color: palette.gold }} />
+              <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 700, fontSize: 13.5 }}>وسوم رائجة</span>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 26 }}>
+              {TAGS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => onQueryChange(t)}
+                  style={{
+                    background: `linear-gradient(135deg, ${palette.nebula}55, ${palette.magenta}33)`,
+                    border: `1px solid ${palette.moon}22`,
+                    borderRadius: 999,
+                    padding: "7px 14px",
+                    color: palette.moon,
+                    fontFamily: "'Tajawal', sans-serif",
+                    fontSize: 12.5,
+                    cursor: "pointer",
+                  }}
+                >
+                  #{t}
+                </button>
+              ))}
+            </div>
+
+            <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 700, fontSize: 13.5 }}>مبدعون مقترحون</span>
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 14 }}>
+              {videos.map((v) => (
+                <div key={v.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        background: `linear-gradient(135deg, ${v.colors[0]}, ${v.colors[2]})`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 18,
+                      }}
+                    >
+                      {v.avatar}
+                    </div>
+                    <span style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 13.5, fontWeight: 600 }}>@{v.user}</span>
+                  </div>
+                  {v.authorUid && session && v.authorUid === session.uid ? null : (
+                    <button
+                      onClick={() => {
+                        if (v.authorUid) {
+                          if (!session) return;
+                          onToggleRealFollow(v.authorUid);
+                        } else {
+                          onToggleFollow(v.id);
+                        }
+                      }}
+                      style={{
+                        background: (v.authorUid ? !!followingUids[v.authorUid] : followMap[v.id]) ? "transparent" : `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+                        border: (v.authorUid ? !!followingUids[v.authorUid] : followMap[v.id]) ? `1px solid ${palette.moon}44` : "none",
+                        borderRadius: 999,
+                        padding: "6px 16px",
+                        color: palette.moon,
+                        fontFamily: "'Tajawal', sans-serif",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {(v.authorUid ? !!followingUids[v.authorUid] : followMap[v.id]) ? "متابَع" : "متابعة"}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {trimmed && (
+          <div>
+            <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(255,255,255,0.05)", borderRadius: 999, padding: 4 }}>
+              {[
+                { key: "all", label: "الكل" },
+                { key: "users", label: "المستخدمون" },
+                { key: "videos", label: "الفيديوهات" },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setSearchTab(t.key)}
+                  style={{
+                    flex: 1,
+                    padding: "8px 0",
+                    borderRadius: 999,
+                    border: "none",
+                    cursor: "pointer",
+                    background: searchTab === t.key ? `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})` : "transparent",
+                    color: palette.moon,
+                    fontFamily: "'Tajawal', sans-serif",
+                    fontWeight: 700,
+                    fontSize: 12.5,
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {(personLoading || usersLoading) && (
+              <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, textAlign: "center" }}>جارٍ البحث عن الحساب...</p>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {(searchTab === "all" || searchTab === "users") && userResults.map(UserRow)}
+              {(searchTab === "all" || searchTab === "videos") && videoResults.map(VideoRow)}
+
+              {!personLoading &&
+                !usersLoading &&
+                ((searchTab === "all" && userResults.length === 0 && videoResults.length === 0) ||
+                  (searchTab === "users" && userResults.length === 0) ||
+                  (searchTab === "videos" && videoResults.length === 0)) && (
+                  <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13.5, textAlign: "center", marginTop: 40 }}>
+                    لا نتائج سحرية لهذا البحث ✨
+                    <br />
+                    جرّب كلمة أخرى
+                  </p>
+                )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function InboxView({ notifications, onMarkRead }) {
+  return (
+    <div style={{ position: "absolute", inset: 0, overflowY: "auto", paddingBottom: 90, direction: "rtl" }}>
+      <div style={{ paddingTop: "16px", paddingLeft: 16, paddingRight: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
+          <Bell style={{ width: 18, height: 18, color: palette.gold }} />
+          <h1 style={{ fontFamily: "'Baloo Bhaijaan 2', sans-serif", color: palette.moon, fontSize: 20, fontWeight: 700 }}>الوارد</h1>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {notifications.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => onMarkRead(n.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                background: n.read ? "transparent" : "rgba(255,209,102,0.07)",
+                border: "none",
+                borderRadius: 12,
+                padding: "10px 8px",
+                cursor: "pointer",
+                textAlign: "right",
+              }}
+            >
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  background: "rgba(255,255,255,0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 17,
+                  flexShrink: 0,
+                }}
+              >
+                {n.avatar}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 13, lineHeight: 1.4, margin: 0 }}>{n.text}</p>
+                <span style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11 }}>{n.time}</span>
+              </div>
+              {!n.read && <div style={{ width: 8, height: 8, borderRadius: "50%", background: palette.gold, boxShadow: `0 0 6px ${palette.gold}`, flexShrink: 0 }} />}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsMenuRow({ icon, label, onClick, danger }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        background: "none",
+        border: "none",
+        borderBottom: `1px solid ${palette.moon}12`,
+        padding: "16px 4px",
+        cursor: "pointer",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {icon}
+        <span style={{ color: danger ? "#FF3E5A" : palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 13.5, fontWeight: 700 }}>{label}</span>
+      </div>
+      <ChevronLeft style={{ width: 16, height: 16, color: palette.lilac }} />
+    </button>
+  );
+}
+
+function SubPageHeader({ title, onBack }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 16px 10px" }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+        <ChevronLeft style={{ width: 20, height: 20, color: palette.moon, transform: "scaleX(-1)" }} />
+      </button>
+      <span style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontWeight: 700, fontSize: 16 }}>{title}</span>
+    </div>
+  );
+}
+
+function SettingsPage({ onClose, resetArmed, onReset, onLogout, session }) {
+  const [subPage, setSubPage] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+
+  const handleConfirmLogout = async () => {
+    setConfirmLogoutOpen(false);
+    setLoggingOut(true);
+    await onLogout();
+    setLoggingOut(false);
+  };
+
+  if (subPage === "balance") {
+    return (
+      <div style={{ position: "absolute", inset: 0, zIndex: 50, background: palette.void, direction: "rtl" }}>
+        <SubPageHeader title="الرصيد" onBack={() => setSubPage(null)} />
+        <div style={{ padding: "30px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>✨</div>
+          <div style={{ color: palette.gold, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 30, marginBottom: 6 }}>0</div>
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13 }}>نظام النقاط والمكافآت قادم قريبًا ✨</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (subPage === "data") {
+    return (
+      <div style={{ position: "absolute", inset: 0, zIndex: 50, background: palette.void, direction: "rtl" }}>
+        <SubPageHeader title="البيانات المحفوظة" onBack={() => setSubPage(null)} />
+        <div style={{ padding: "20px 16px" }}>
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, lineHeight: 1.7, marginBottom: 20 }}>
+            إعجاباتك ومحفوظاتك ومتابعتك للحسابات التجريبية محفوظة محليًا على هذا الجهاز فقط. يمكنك مسحها في أي وقت.
+          </p>
+          <button
+            onClick={onReset}
+            style={{
+              width: "100%",
+              background: "rgba(255,255,255,0.05)",
+              border: `1px solid ${resetArmed ? palette.magenta : "transparent"}`,
+              borderRadius: 14,
+              padding: "14px 16px",
+              color: resetArmed ? palette.magenta : palette.moon,
+              fontFamily: "'Tajawal', sans-serif",
+              fontSize: 13.5,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {resetArmed ? "اضغط للتأكيد ⚠️" : "مسح البيانات المحفوظة على هذا الجهاز"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 50, background: palette.void, direction: "rtl" }}>
+      <SubPageHeader title="الإعدادات" onBack={onClose} />
+      <div style={{ padding: "6px 20px" }}>
+        <SettingsMenuRow icon={<span style={{ fontSize: 17 }}>✨</span>} label="الرصيد" onClick={() => setSubPage("balance")} />
+        <SettingsMenuRow icon={<span style={{ fontSize: 17 }}>💾</span>} label="البيانات المحفوظة" onClick={() => setSubPage("data")} />
+        {session && (
+          <SettingsMenuRow
+            icon={<span style={{ fontSize: 17 }}>🚪</span>}
+            label={loggingOut ? "جارٍ تسجيل الخروج..." : "تسجيل الخروج"}
+            onClick={() => setConfirmLogoutOpen(true)}
+            danger
+          />
+        )}
+      </div>
+
+      {confirmLogoutOpen && (
+        <ConfirmModal
+          title="تسجيل الخروج"
+          message="هل أنت متأكد من تسجيل الخروج من حسابك؟"
+          confirmLabel="تسجيل الخروج"
+          danger
+          onConfirm={handleConfirmLogout}
+          onCancel={() => setConfirmLogoutOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditProfilePage({ onClose, session, onSessionUpdate }) {
+  const [name, setName] = useState(session ? session.name : "");
+  const [birthdate, setBirthdate] = useState(session && session.birthdate ? session.birthdate : "");
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [savingBirthdate, setSavingBirthdate] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const birthdateLocked = !!(session && session.birthdate);
+  const nameChangedRecently =
+    session && session.lastNameChangeAt && Date.now() - session.lastNameChangeAt < NAME_CHANGE_COOLDOWN_MS;
+  const nameRemainingDays = nameChangedRecently
+    ? Math.ceil((NAME_CHANGE_COOLDOWN_MS - (Date.now() - session.lastNameChangeAt)) / (24 * 60 * 60 * 1000))
+    : 0;
+
+  const handlePhotoPick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !session) return;
+    setError("");
+    setUploadingPhoto(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      await updateUserPhoto(session.uid, url);
+      onSessionUpdate({ photoUrl: url });
+      setInfo("تم تحديث الصورة ✨");
+    } catch (err) {
+      setError("تعذّر رفع الصورة، حاول مجددًا");
+    }
+    setUploadingPhoto(false);
+  };
+
+  const handleSaveName = async () => {
+    if (!session) return;
+    setError("");
+    setInfo("");
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError("الاسم لا يمكن أن يكون فارغًا");
+      return;
+    }
+    if (trimmed === session.name) return;
+    setSavingName(true);
+    try {
+      await updateUserName(session.uid, trimmed);
+      onSessionUpdate({ name: trimmed, lastNameChangeAt: Date.now() });
+      setInfo("تم تحديث الاسم ✨");
+    } catch (err) {
+      setError(err.message || "تعذّر تحديث الاسم");
+    }
+    setSavingName(false);
+  };
+
+  const handleSaveBirthdate = async () => {
+    if (!session || !birthdate) return;
+    setError("");
+    setInfo("");
+    setSavingBirthdate(true);
+    try {
+      await updateUserBirthdate(session.uid, birthdate);
+      onSessionUpdate({ birthdate });
+      setInfo("تم حفظ تاريخ الميلاد ✨");
+    } catch (err) {
+      setError(err.message || "تعذّر حفظ تاريخ الميلاد");
+    }
+    setSavingBirthdate(false);
+  };
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 50, background: palette.void, direction: "rtl", overflowY: "auto" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 16px 10px" }}>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <X style={{ width: 20, height: 20, color: palette.moon }} />
+        </button>
+        <span style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontWeight: 700, fontSize: 16 }}>تعديل الملف الشخصي</span>
+      </div>
+
+      <div style={{ padding: "10px 20px 40px", textAlign: "center" }}>
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: "none" }} />
+        <button
+          onClick={handlePhotoPick}
+          disabled={uploadingPhoto}
+          style={{
+            position: "relative",
+            width: 84,
+            height: 84,
+            margin: "10px auto 6px",
+            borderRadius: "50%",
+            background: `conic-gradient(${palette.magenta}, ${palette.gold}, ${palette.cyan}, ${palette.magenta})`,
+            padding: 3,
+            border: "none",
+            cursor: uploadingPhoto ? "not-allowed" : "pointer",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: "50%",
+              background: palette.void2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 34,
+              overflow: "hidden",
+            }}
+          >
+            {session && session.photoUrl ? (
+              <img src={session.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              "🌟"
+            )}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              width: 26,
+              height: 26,
+              borderRadius: "50%",
+              background: palette.magenta,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: `2px solid ${palette.void}`,
+            }}
+          >
+            <Camera style={{ width: 12, height: 12, color: palette.moon }} />
+          </div>
+        </button>
+        <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5, marginBottom: 20 }}>
+          {uploadingPhoto ? "جارٍ رفع الصورة..." : "اضغط لتغيير صورتك"}
+        </p>
+
+        {error && (
+          <p style={{ color: palette.magenta, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginBottom: 10 }}>{error}</p>
+        )}
+        {info && (
+          <p style={{ color: palette.cyan, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginBottom: 10 }}>{info}</p>
+        )}
+
+        <div style={{ textAlign: "right" }}>
+          <label style={labelStyle}>الاسم</label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+            <input value={name} onChange={(e) => setName(e.target.value)} style={{ ...fieldStyle, flex: 1, marginBottom: 0 }} />
+            <button
+              onClick={handleSaveName}
+              disabled={savingName || nameChangedRecently || name.trim() === (session ? session.name : "")}
+              style={{
+                padding: "0 16px",
+                borderRadius: 12,
+                border: "none",
+                cursor: savingName || nameChangedRecently ? "not-allowed" : "pointer",
+                background:
+                  savingName || nameChangedRecently || name.trim() === (session ? session.name : "")
+                    ? "rgba(255,255,255,0.1)"
+                    : `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+                color: palette.moon,
+                fontFamily: "'Tajawal', sans-serif",
+                fontWeight: 700,
+                fontSize: 12.5,
+                opacity: savingName || nameChangedRecently || name.trim() === (session ? session.name : "") ? 0.6 : 1,
+              }}
+            >
+              حفظ
+            </button>
+          </div>
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11, marginBottom: 18 }}>
+            {nameChangedRecently ? `يمكنك تغيير الاسم مجددًا بعد ${nameRemainingDays} يوم/أيام` : "يمكن تغيير الاسم مرة كل 7 أيام"}
+          </p>
+
+          <label style={labelStyle}>تاريخ الميلاد</label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+            <input
+              type="date"
+              value={birthdate}
+              disabled={birthdateLocked}
+              onChange={(e) => setBirthdate(e.target.value)}
+              style={{ ...fieldStyle, flex: 1, marginBottom: 0, opacity: birthdateLocked ? 0.6 : 1, direction: "ltr" }}
+            />
+            {!birthdateLocked && (
+              <button
+                onClick={handleSaveBirthdate}
+                disabled={savingBirthdate || !birthdate}
+                style={{
+                  padding: "0 16px",
+                  borderRadius: 12,
+                  border: "none",
+                  cursor: savingBirthdate || !birthdate ? "not-allowed" : "pointer",
+                  background: savingBirthdate || !birthdate ? "rgba(255,255,255,0.1)" : `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+                  color: palette.moon,
+                  fontFamily: "'Tajawal', sans-serif",
+                  fontWeight: 700,
+                  fontSize: 12.5,
+                  opacity: savingBirthdate || !birthdate ? 0.6 : 1,
+                }}
+              >
+                حفظ
+              </button>
+            )}
+          </div>
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11 }}>
+            {birthdateLocked ? "تم تعيين تاريخ الميلاد ولا يمكن تغييره" : "يمكن تعيين تاريخ الميلاد مرة واحدة فقط"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProfileView({
+  videos,
+  likedMap,
+  savedMap,
+  followMap,
+  profileTab,
+  setProfileTab,
+  onSelectVideo,
+  storageOK,
+  resetArmed,
+  onReset,
+  session,
+  onLogout,
+  followingCount,
+  followersCount,
+  onSessionUpdate,
+  onNavigateToUser,
+  realLikedIds,
+  realSavedIds,
+}) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [followListMode, setFollowListMode] = useState(null);
+
+  const savedList = videos.filter((v) => (v.authorUid ? !!realSavedIds[v.id] : !!savedMap[v.id]));
+  const likedList = videos.filter((v) => (v.authorUid ? !!realLikedIds[v.id] : !!likedMap[v.id]));
+  const postsList = session ? videos.filter((v) => v.authorUid === session.uid) : [];
+  const list = profileTab === "posts" ? postsList : profileTab === "saved" ? savedList : likedList;
+  const displayName = session ? session.name : "ضيف الأسطورة";
+
+  if (followListMode && session) {
+    return (
+      <FollowListPage
+        uid={session.uid}
+        mode={followListMode}
+        onBack={() => setFollowListMode(null)}
+        onSelectUser={(u) => {
+          setFollowListMode(null);
+          onNavigateToUser(u);
+        }}
+      />
+    );
+  }
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflowY: "auto", paddingBottom: 90, direction: "rtl" }}>
+      {session && (
+        <button
+          onClick={() => setSettingsOpen(true)}
+          style={{ position: "absolute", top: 16, left: 16, zIndex: 5, background: "none", border: "none", cursor: "pointer", padding: 6 }}
+        >
+          <Menu style={{ width: 21, height: 21, color: palette.moon }} />
+        </button>
+      )}
+      {session && (
+        <button
+          onClick={() => setEditOpen(true)}
+          style={{ position: "absolute", top: 16, right: 16, zIndex: 5, background: "none", border: "none", cursor: "pointer", padding: 6 }}
+        >
+          <Pencil style={{ width: 19, height: 19, color: palette.moon }} />
+        </button>
+      )}
+
+      <div style={{ paddingTop: "20px", paddingLeft: 16, paddingRight: 16, textAlign: "center" }}>
+        <div
+          style={{
+            width: 76,
+            height: 76,
+            margin: "0 auto 10px",
+            borderRadius: "50%",
+            background: `conic-gradient(${palette.magenta}, ${palette.gold}, ${palette.cyan}, ${palette.magenta})`,
+            padding: 3,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: "50%",
+              background: palette.void2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 32,
+              overflow: "hidden",
+            }}
+          >
+            {session && session.photoUrl ? (
+              <img src={session.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              "🌟"
+            )}
+          </div>
+        </div>
+        <h2 style={{ fontFamily: "'Baloo Bhaijaan 2', sans-serif", color: palette.moon, fontSize: 17, fontWeight: 700, margin: "0 0 2px" }}>{displayName}</h2>
+        <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12, margin: "0 0 4px", direction: "ltr" }}>
+          {session && session.khurafaId ? "خُرافة ID: " + session.khurafaId : "\u00A0"}
+        </p>
+        {session && (
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11, margin: "0 0 18px", opacity: 0.75, direction: "ltr" }}>{session.email}</p>
+        )}
+
+        <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 22 }}>
+          <div>
+            <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 16 }}>{formatCount(postsList.length)}</div>
+            <div style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>منشورات</div>
+          </div>
+          <button onClick={() => session && setFollowListMode("followers")} style={{ background: "none", border: "none", cursor: session ? "pointer" : "default", padding: 0 }}>
+            <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 16 }}>{formatCount(followersCount)}</div>
+            <div style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>متابَعون</div>
+          </button>
+          <button onClick={() => session && setFollowListMode("following")} style={{ background: "none", border: "none", cursor: session ? "pointer" : "default", padding: 0 }}>
+            <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 16 }}>{formatCount(followingCount)}</div>
+            <div style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>يتابع</div>
+          </button>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
+          {[
+            { key: "posts", label: "منشوراتي" },
+            { key: "saved", label: "محفوظ" },
+            { key: "liked", label: "أعجبك" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setProfileTab(t.key)}
+              style={{
+                background: profileTab === t.key ? `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})` : "transparent",
+                border: `1px solid ${palette.moon}22`,
+                borderRadius: 999,
+                padding: "6px 18px",
+                color: palette.moon,
+                fontFamily: "'Tajawal', sans-serif",
+                fontSize: 12.5,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {list.length === 0 ? (
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, marginTop: 40 }}>
+            {profileTab === "posts" ? "لم تنشر شيئًا بعد — اضغط + لنشر أول لحظة خرافية ✨" : profileTab === "saved" ? "لم تحفظ أي سحر بعد ✨" : "لم تُعجب بأي فيديو بعد ✨"}
+          </p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+            {list.map((v) => {
+              const thumb = getVideoThumbnail(v);
+              return (
+                <button
+                  key={v.id}
+                  onClick={() => onSelectVideo(v.id, list)}
+                  style={{
+                    position: "relative",
+                    aspectRatio: "9 / 14",
+                    borderRadius: 10,
+                    border: "none",
+                    cursor: "pointer",
+                    overflow: "hidden",
+                    padding: 0,
+                    background: `linear-gradient(160deg, ${v.colors[0]}, ${v.colors[2]})`,
+                  }}
+                >
+                  {thumb && (
+                    <img
+                      src={thumb}
+                      alt=""
+                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  )}
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "linear-gradient(to top, rgba(5,2,12,0.7) 0%, transparent 45%)",
+                    }}
+                  />
+                  <div style={{ position: "absolute", bottom: 4, right: 6, display: "flex", alignItems: "center", gap: 3 }}>
+                    <Heart style={{ width: 11, height: 11, color: palette.moon, fill: palette.moon }} />
+                    <span style={{ color: palette.moon, fontSize: 10, fontFamily: "'Tajawal', sans-serif", fontWeight: 700 }}>{formatCount(v.likes)}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {settingsOpen && (
+        <SettingsPage onClose={() => setSettingsOpen(false)} resetArmed={resetArmed} onReset={onReset} onLogout={onLogout} session={session} />
+      )}
+      {editOpen && <EditProfilePage onClose={() => setEditOpen(false)} session={session} onSessionUpdate={onSessionUpdate} />}
+    </div>
+  );
+}
+
+function FollowListPage({ uid, mode, onBack, onSelectUser }) {
+  const [list, setList] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setList(null);
+    fetchFollowList(uid, mode).then((res) => {
+      if (!cancelled) setList(res);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [uid, mode]);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 55, background: palette.void, direction: "rtl", overflowY: "auto" }}>
+      <SubPageHeader title={mode === "followers" ? "المتابَعون" : "يتابع"} onBack={onBack} />
+      <div style={{ padding: "6px 16px" }}>
+        {list === null && (
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, textAlign: "center", marginTop: 30 }}>جارٍ التحميل...</p>
+        )}
+        {list && list.length === 0 && (
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, textAlign: "center", marginTop: 30 }}>
+            {mode === "followers" ? "لا يوجد متابِعون بعد" : "لا يتابع أحدًا بعد"}
+          </p>
+        )}
+        {list &&
+          list.map((u) => (
+            <button
+              key={u.uid}
+              onClick={() => onSelectUser(u.uid)}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                background: "none",
+                border: "none",
+                borderBottom: `1px solid ${palette.moon}12`,
+                padding: "12px 4px",
+                cursor: "pointer",
+                textAlign: "right",
+              }}
+            >
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: "50%",
+                  background: palette.void2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                  overflow: "hidden",
+                  flexShrink: 0,
+                }}
+              >
+                {u.photoUrl ? <img src={u.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🌟"}
+              </div>
+              <div style={{ flex: 1, overflow: "hidden" }}>
+                <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 700, fontSize: 13.5 }}>{u.name}</div>
+                {u.khurafaId && (
+                  <div style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11, direction: "ltr", textAlign: "right" }}>
+                    خُرافة ID: {u.khurafaId}
+                  </div>
+                )}
+              </div>
+            </button>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+function PublicProfileView({ uid, videos, followingUids, session, onToggleRealFollow, onBack, onSelectVideo, onNavigateToUser }) {
+  const [profile, setProfile] = useState(null);
+  const [counts, setCounts] = useState({ followingCount: 0, followersCount: 0 });
+  const [loading, setLoading] = useState(true);
+  const [followListMode, setFollowListMode] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setProfile(null);
+    Promise.all([fetchUserProfile(uid), fetchFollowCounts(uid)]).then(([p, c]) => {
+      if (cancelled) return;
+      setProfile(p);
+      setCounts(c);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [uid]);
+
+  const postsList = videos.filter((v) => v.authorUid === uid);
+  const isSelf = session && session.uid === uid;
+  const isFollowing = !!followingUids[uid];
+
+  if (followListMode) {
+    return (
+      <FollowListPage
+        uid={uid}
+        mode={followListMode}
+        onBack={() => setFollowListMode(null)}
+        onSelectUser={(u) => {
+          setFollowListMode(null);
+          onNavigateToUser(u);
+        }}
+      />
+    );
+  }
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 45, background: palette.void, direction: "rtl", overflowY: "auto" }}>
+      <SubPageHeader title={profile ? profile.name : "الملف الشخصي"} onBack={onBack} />
+      {loading ? (
+        <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, textAlign: "center", marginTop: 40 }}>جارٍ التحميل...</p>
+      ) : !profile ? (
+        <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, textAlign: "center", marginTop: 40 }}>تعذّر العثور على هذا الحساب</p>
+      ) : (
+        <div style={{ padding: "6px 16px 90px", textAlign: "center" }}>
+          <div
+            style={{
+              width: 76,
+              height: 76,
+              margin: "0 auto 10px",
+              borderRadius: "50%",
+              background: `conic-gradient(${palette.magenta}, ${palette.gold}, ${palette.cyan}, ${palette.magenta})`,
+              padding: 3,
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "50%",
+                background: palette.void2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 32,
+                overflow: "hidden",
+              }}
+            >
+              {profile.photoUrl ? <img src={profile.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🌟"}
+            </div>
+          </div>
+          <h2 style={{ fontFamily: "'Baloo Bhaijaan 2', sans-serif", color: palette.moon, fontSize: 17, fontWeight: 700, margin: "0 0 2px" }}>{profile.name}</h2>
+          {profile.khurafaId && (
+            <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12, margin: "0 0 18px", direction: "ltr" }}>
+              خُرافة ID: {profile.khurafaId}
+            </p>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 22 }}>
+            <div>
+              <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 16 }}>{formatCount(postsList.length)}</div>
+              <div style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>منشورات</div>
+            </div>
+            <button onClick={() => setFollowListMode("followers")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 16 }}>{formatCount(counts.followersCount)}</div>
+              <div style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>متابَعون</div>
+            </button>
+            <button onClick={() => setFollowListMode("following")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <div style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontWeight: 800, fontSize: 16 }}>{formatCount(counts.followingCount)}</div>
+              <div style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>يتابع</div>
+            </button>
+          </div>
+
+          {!isSelf && session && (
+            <button
+              onClick={() => onToggleRealFollow(uid)}
+              style={{
+                background: isFollowing ? "transparent" : `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+                border: isFollowing ? `1px solid ${palette.moon}44` : "none",
+                borderRadius: 999,
+                padding: "9px 28px",
+                color: palette.moon,
+                fontFamily: "'Tajawal', sans-serif",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                marginBottom: 22,
+              }}
+            >
+              {isFollowing ? "متابَع" : "متابعة"}
+            </button>
+          )}
+
+          {postsList.length === 0 ? (
+            <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 13, marginTop: 30 }}>لا توجد منشورات بعد</p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+              {postsList.map((v) => {
+                const thumb = getVideoThumbnail(v);
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => onSelectVideo(v.id, postsList)}
+                    style={{
+                      position: "relative",
+                      aspectRatio: "9 / 14",
+                      borderRadius: 10,
+                      border: "none",
+                      cursor: "pointer",
+                      overflow: "hidden",
+                      padding: 0,
+                      background: `linear-gradient(160deg, ${v.colors[0]}, ${v.colors[2]})`,
+                    }}
+                  >
+                    {thumb && (
+                      <img
+                        src={thumb}
+                        alt=""
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    )}
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(5,2,12,0.7) 0%, transparent 45%)" }} />
+                    <div style={{ position: "absolute", bottom: 4, right: 6, display: "flex", alignItems: "center", gap: 3 }}>
+                      <Heart style={{ width: 11, height: 11, color: palette.moon, fill: palette.moon }} />
+                      <span style={{ color: palette.moon, fontSize: 10, fontFamily: "'Tajawal', sans-serif", fontWeight: 700 }}>{formatCount(v.likes)}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function AddButton({ onClick }) {
+  return (
+    <button onClick={onClick} style={{ position: "relative", width: 46, height: 32, transform: "translateY(-2px)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+      <div style={{ position: "absolute", inset: 0, transform: "translateX(-4px)", borderRadius: 8, background: palette.cyan }} />
+      <div style={{ position: "absolute", inset: 0, transform: "translateX(4px)", borderRadius: 8, background: palette.magenta }} />
+      <div style={{ position: "absolute", inset: 0, borderRadius: 8, background: palette.void, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Plus style={{ width: 21, height: 21, color: palette.moon }} strokeWidth={3} />
+      </div>
+    </button>
+  );
+}
+
+function NavItem({ icon, label, active, badge, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: 0, position: "relative" }}
+    >
+      {React.cloneElement(icon, {
+        style: { width: 23, height: 23, color: active ? palette.moon : palette.lilac, fill: active ? palette.moon : "none" },
+      })}
+      <span style={{ fontFamily: "'Tajawal', sans-serif", fontSize: 10.5, fontWeight: active ? 700 : 500, color: active ? palette.moon : palette.lilac }}>{label}</span>
+      {badge ? (
+        <span
+          style={{
+            position: "absolute",
+            top: -3,
+            left: -8,
+            background: palette.magenta,
+            color: palette.moon,
+            fontSize: 9,
+            fontWeight: 700,
+            borderRadius: 999,
+            padding: "1px 5px",
+            boxShadow: `0 0 6px ${palette.magenta}`,
+          }}
+        >
+          {badge}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+function Toast({ message, duration }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: 96,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 60,
+        maxWidth: "88%",
+        background: "rgba(20,10,35,0.92)",
+        border: `1px solid ${palette.gold}55`,
+        borderRadius: 16,
+        padding: "9px 18px",
+        color: palette.moon,
+        fontFamily: "'Tajawal', sans-serif",
+        fontSize: 12.5,
+        whiteSpace: "pre-wrap",
+        textAlign: "center",
+        lineHeight: 1.5,
+        boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+        animation: `toastPop ${(duration || 2200) / 1000}s ease forwards`,
+        pointerEvents: "none",
+      }}
+    >
+      {message}
+    </div>
+  );
+}
+
+const fieldStyle = {
+  width: "100%",
+  boxSizing: "border-box",
+  background: "rgba(255,255,255,0.07)",
+  border: `1px solid ${palette.moon}22`,
+  borderRadius: 12,
+  padding: "11px 14px",
+  color: palette.moon,
+  fontFamily: "'Tajawal', sans-serif",
+  fontSize: 13.5,
+  outline: "none",
+  marginBottom: 12,
+};
+
+const labelStyle = {
+  display: "block",
+  color: palette.lilac,
+  fontFamily: "'Tajawal', sans-serif",
+  fontSize: 12,
+  marginBottom: 6,
+};
+
+function submitBtnStyleShared(enabled) {
+  return {
+    width: "100%",
+    padding: "12px 0",
+    borderRadius: 999,
+    border: "none",
+    cursor: enabled ? "pointer" : "not-allowed",
+    background: enabled ? `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})` : "rgba(255,255,255,0.1)",
+    color: palette.moon,
+    fontFamily: "'Tajawal', sans-serif",
+    fontWeight: 800,
+    fontSize: 14,
+    opacity: enabled ? 1 : 0.6,
+    marginTop: 4,
+  };
+}
+
+const linkBtnStyleShared = {
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  color: palette.cyan,
+  fontFamily: "'Tajawal', sans-serif",
+  fontSize: 12.5,
+  fontWeight: 700,
+  padding: 0,
+};
+
+function GoogleIcon({ size }) {
+  return (
+    <svg width={size || 18} height={size || 18} viewBox="0 0 48 48">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.6 5.5 29.6 3.5 24 3.5 12.7 3.5 3.5 12.7 3.5 24S12.7 44.5 24 44.5 44.5 35.3 44.5 24c0-1.2-.1-2.4-.9-3.5z" />
+      <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.6 6.5 29.6 4.5 24 4.5c-7.7 0-14.4 4.3-17.7 10.2z" />
+      <path fill="#4CAF50" d="M24 44.5c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.4c-2 1.4-4.6 2.2-7.7 2.2-5.2 0-9.6-3.3-11.3-7.9l-6.6 5.1C9.5 40.1 16.2 44.5 24 44.5z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.4C41.5 36 44.5 30.5 44.5 24c0-1.2-.1-2.4-.9-3.5z" />
+    </svg>
+  );
+}
+
+function AuthScreen() {
+  const [mode, setMode] = useState("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  const switchMode = (m) => {
+    setMode(m);
+    setError("");
+    setInfo("");
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setInfo("");
+    const normEmail = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(normEmail)) {
+      setError("البريد الإلكتروني غير صحيح");
+      return;
+    }
+    if (!password) {
+      setError("الرجاء إدخال كلمة المرور");
+      return;
+    }
+    setBusy(true);
+    try {
+      const cred = await auth.signInWithEmailAndPassword(normEmail, password);
+      await ensureUserProfile(cred.user);
+      setBusy(false);
+    } catch (err) {
+      setBusy(false);
+      setError(translateAuthError(err));
+    }
+  };
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError("");
+    setInfo("");
+    const trimmedName = name.trim();
+    const normEmail = email.trim().toLowerCase();
+    if (!trimmedName) {
+      setError("الرجاء إدخال الاسم");
+      return;
+    }
+    if (!EMAIL_RE.test(normEmail)) {
+      setError("البريد الإلكتروني غير صحيح");
+      return;
+    }
+    if (password.length < 6) {
+      setError("كلمة المرور 6 أحرف على الأقل");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("كلمتا المرور غير متطابقتين");
+      return;
+    }
+    setBusy(true);
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(normEmail, password);
+      await cred.user.updateProfile({ displayName: trimmedName });
+      await db.ref("users/" + cred.user.uid).set({
+        name: trimmedName,
+        email: normEmail,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+      });
+      setBusy(false);
+    } catch (err) {
+      setBusy(false);
+      setError(translateAuthError(err));
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setInfo("");
+    setGoogleBusy(true);
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await auth.signInWithPopup(provider);
+      await ensureUserProfile(result.user);
+      setGoogleBusy(false);
+    } catch (err) {
+      setGoogleBusy(false);
+      if (err && err.code === "auth/popup-blocked") {
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await auth.signInWithRedirect(provider);
+          return;
+        } catch (err2) {
+          setError(translateAuthError(err2));
+          return;
+        }
+      }
+      setError(translateAuthError(err));
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setInfo("");
+    const normEmail = forgotEmail.trim().toLowerCase();
+    if (!EMAIL_RE.test(normEmail)) {
+      setError("البريد الإلكتروني غير صحيح");
+      return;
+    }
+    setBusy(true);
+    try {
+      await auth.sendPasswordResetEmail(normEmail);
+      setBusy(false);
+      setInfo("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني ✨");
+    } catch (err) {
+      setBusy(false);
+      setError(translateAuthError(err));
+    }
+  };
+
+  const errorBox = error ? (
+    <p style={{ color: palette.magenta, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginBottom: 10, textAlign: "center" }}>{error}</p>
+  ) : null;
+
+  const infoBox = info ? (
+    <p style={{ color: palette.cyan, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginBottom: 10, textAlign: "center", lineHeight: 1.6 }}>{info}</p>
+  ) : null;
+
+  return (
+    <div style={{ position: "relative", width: "100%", maxWidth: 480, height: "100%", overflow: "hidden", background: palette.void, display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", justifyContent: "center", padding: "28px 26px", direction: "rtl" }}>
+        <div style={{ textAlign: "center", marginBottom: 26 }}>
+          <div
+            style={{
+              width: 60,
+              height: 60,
+              margin: "0 auto 12px",
+              borderRadius: "50%",
+              background: `conic-gradient(${palette.magenta}, ${palette.gold}, ${palette.cyan}, ${palette.magenta})`,
+              padding: 3,
+            }}
+          >
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: palette.void2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26 }}>
+              ✨
+            </div>
+          </div>
+          <h1 style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontSize: 22, fontWeight: 800, margin: 0 }}>خُرافة</h1>
+          <p style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 12.5, marginTop: 4 }}>عالم الفيديو الأسطوري</p>
+        </div>
+
+        {(mode === "login" || mode === "signup") && (
+          <>
+            <div style={{ display: "flex", gap: 8, marginBottom: 18, background: "rgba(255,255,255,0.05)", borderRadius: 999, padding: 4 }}>
+              <button
+                onClick={() => switchMode("login")}
+                style={{
+                  flex: 1,
+                  padding: "8px 0",
+                  borderRadius: 999,
+                  border: "none",
+                  cursor: "pointer",
+                  background: mode === "login" ? `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})` : "transparent",
+                  color: palette.moon,
+                  fontFamily: "'Tajawal', sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                }}
+              >
+                تسجيل الدخول
+              </button>
+              <button
+                onClick={() => switchMode("signup")}
+                style={{
+                  flex: 1,
+                  padding: "8px 0",
+                  borderRadius: 999,
+                  border: "none",
+                  cursor: "pointer",
+                  background: mode === "signup" ? `linear-gradient(135deg, ${palette.nebula}, ${palette.magenta})` : "transparent",
+                  color: palette.moon,
+                  fontFamily: "'Tajawal', sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                }}
+              >
+                إنشاء حساب
+              </button>
+            </div>
+
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={googleBusy}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                padding: "11px 0",
+                borderRadius: 999,
+                border: `1px solid ${palette.moon}33`,
+                background: "rgba(255,255,255,0.06)",
+                color: palette.moon,
+                fontFamily: "'Tajawal', sans-serif",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: googleBusy ? "not-allowed" : "pointer",
+                opacity: googleBusy ? 0.6 : 1,
+                marginBottom: 16,
+              }}
+            >
+              <GoogleIcon />
+              {googleBusy ? "جارٍ الاتصال بـ Google..." : "متابعة باستخدام Google"}
+            </button>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{ flex: 1, height: 1, background: `${palette.moon}22` }} />
+              <span style={{ color: palette.lilac, fontFamily: "'Tajawal', sans-serif", fontSize: 11.5 }}>أو</span>
+              <div style={{ flex: 1, height: 1, background: `${palette.moon}22` }} />
+            </div>
+          </>
+        )}
+
+        {mode === "login" && (
+          <form onSubmit={handleLogin}>
+            {errorBox}
+            <label style={labelStyle}>البريد الإلكتروني</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={fieldStyle} placeholder="example@mail.com" dir="ltr" />
+            <label style={labelStyle}>كلمة المرور</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={fieldStyle} placeholder="••••••••" dir="ltr" />
+            <div style={{ textAlign: "left", marginBottom: 14 }}>
+              <button type="button" onClick={() => switchMode("forgot")} style={linkBtnStyleShared}>
+                نسيت كلمة السر؟
+              </button>
+            </div>
+            <button type="submit" disabled={busy} style={submitBtnStyleShared(!busy)}>
+              {busy ? "جارٍ الدخول..." : "دخول"}
+            </button>
+          </form>
+        )}
+
+        {mode === "signup" && (
+          <form onSubmit={handleSignup}>
+            {errorBox}
+            <label style={labelStyle}>الاسم</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={fieldStyle} placeholder="اسمك الكامل" />
+            <label style={labelStyle}>البريد الإلكتروني</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={fieldStyle} placeholder="example@mail.com" dir="ltr" />
+            <label style={labelStyle}>كلمة المرور</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={fieldStyle} placeholder="6 أحرف على الأقل" dir="ltr" />
+            <label style={labelStyle}>تأكيد كلمة المرور</label>
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={fieldStyle} placeholder="••••••••" dir="ltr" />
+            <button type="submit" disabled={busy} style={submitBtnStyleShared(!busy)}>
+              {busy ? "جارٍ الإنشاء..." : "إنشاء حساب"}
+            </button>
+          </form>
+        )}
+
+        {mode === "forgot" && (
+          <form onSubmit={handleForgotSubmit}>
+            <p style={{ color: palette.moon, fontFamily: "'Baloo Bhaijaan 2', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 14, textAlign: "center" }}>
+              استعادة كلمة المرور
+            </p>
+            {errorBox}
+            {infoBox}
+            <label style={labelStyle}>أدخل بريدك الإلكتروني</label>
+            <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} style={fieldStyle} placeholder="example@mail.com" dir="ltr" />
+            <button type="submit" disabled={busy} style={submitBtnStyleShared(!busy)}>
+              {busy ? "جارٍ الإرسال..." : "إرسال رابط إعادة التعيين"}
+            </button>
+            <button type="button" onClick={() => switchMode("login")} style={{ ...linkBtnStyleShared, display: "block", margin: "14px auto 0" }}>
+              العودة لتسجيل الدخول
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KhurafaApp() {
+  const storageOK = useMemo(() => storageIsAvailable(), []);
+  const idbOK = useMemo(() => typeof window.File !== "undefined" && typeof window.FileReader !== "undefined", []);
+  const persisted = useMemo(() => (storageOK ? loadPersistedState() : null), [storageOK]);
+
+  const [realVideos, setRealVideos] = useState([]);
+  const [likedMap, setLikedMap] = useState(() => (persisted && persisted.likedMap) || {});
+  const [savedMap, setSavedMap] = useState(() => (persisted && persisted.savedMap) || {});
+  const [followMap, setFollowMap] = useState(() => (persisted && persisted.followMap) || {});
+  const [shareBumpMap, setShareBumpMap] = useState({});
+  const [burstMap, setBurstMap] = useState({});
+  const [commentsMap, setCommentsMap] = useState(() => (persisted && persisted.commentsMap) || SEED_COMMENTS);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [commentsOpenId, setCommentsOpenId] = useState(null);
+  const [shareOpenId, setShareOpenId] = useState(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [view, setView] = useState("feed");
+  const [tab, setTab] = useState("foryou");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [spotlightId, setSpotlightId] = useState(null);
+  const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || INITIAL_NOTIFICATIONS);
+  const [toast, setToast] = useState(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newCaption, setNewCaption] = useState("");
+  const [profileTab, setProfileTab] = useState("posts");
+  const [resetArmed, setResetArmed] = useState(false);
+  const [pendingVideoFile, setPendingVideoFile] = useState(null);
+  const [pendingVideoUrl, setPendingVideoUrl] = useState(null);
+  const [publishing, setPublishing] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const [authLoading, setAuthLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [viewedProfileUid, setViewedProfileUid] = useState(null);
+  const [detailList, setDetailList] = useState(null);
+  const [detailActiveIndex, setDetailActiveIndex] = useState(0);
+  const [followingUids, setFollowingUids] = useState({});
+  const [realLikedIds, setRealLikedIds] = useState({});
+  const [realSavedIds, setRealSavedIds] = useState({});
+  const [followersCount, setFollowersCount] = useState(0);
+
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        setSession(null);
+        setAuthLoading(false);
+        return;
+      }
+      const profile = await ensureUserProfile(user).catch(() => null);
+      setSession({
+        uid: user.uid,
+        name: (profile && profile.name) || user.displayName || "مستخدم خُرافة",
+        email: user.email || "",
+        khurafaId: profile && profile.khurafaId,
+        photoUrl: profile && profile.photoUrl,
+        birthdate: profile && profile.birthdate,
+        lastNameChangeAt: profile && profile.lastNameChangeAt,
+      });
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    auth.getRedirectResult().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      setFollowingUids({});
+      setFollowersCount(0);
+      return;
+    }
+    const followingRef = db.ref("following/" + session.uid);
+    const followersRef = db.ref("followers/" + session.uid);
+    const onFollowing = followingRef.on("value", (snap) => setFollowingUids(snap.val() || {}));
+    const onFollowers = followersRef.on("value", (snap) => setFollowersCount(snap.exists() ? Object.keys(snap.val()).length : 0));
+    return () => {
+      followingRef.off("value", onFollowing);
+      followersRef.off("value", onFollowers);
+    };
+  }, [session]);
+
+  useEffect(() => {
+    if (!session) {
+      setRealLikedIds({});
+      setRealSavedIds({});
+      return;
+    }
+    const likesRef = db.ref("likes/" + session.uid);
+    const savesRef = db.ref("saves/" + session.uid);
+    const onLikes = likesRef.on("value", (snap) => setRealLikedIds(snap.val() || {}));
+    const onSaves = savesRef.on("value", (snap) => setRealSavedIds(snap.val() || {}));
+    return () => {
+      likesRef.off("value", onLikes);
+      savesRef.off("value", onSaves);
+    };
+  }, [session]);
+
+  useEffect(() => {
+    const unsub = listenVideos((list) => setRealVideos(list));
+    return unsub;
+  }, []);
+
+  const videos = useMemo(() => [...realVideos, ...INITIAL_VIDEOS], [realVideos]);
+
+  useEffect(() => {
+    const unlockAudio = () => {
+      try {
+        const a = document.createElement("audio");
+        a.muted = false;
+        a.volume = 0.01;
+        a.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==";
+        const p = a.play();
+        if (p && p.catch) p.catch(() => {});
+        window.setTimeout(() => {
+          try {
+            a.pause();
+          } catch (e) {}
+        }, 60);
+      } catch (e) {}
+      setMuted(false);
+      window.removeEventListener("click", unlockAudio);
+      window.removeEventListener("touchend", unlockAudio);
+    };
+    window.addEventListener("click", unlockAudio);
+    window.addEventListener("touchend", unlockAudio);
+    return () => {
+      window.removeEventListener("click", unlockAudio);
+      window.removeEventListener("touchend", unlockAudio);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!storageOK) return;
+    persistState({ likedMap, savedMap, followMap, commentsMap, notifications });
+  }, [storageOK, likedMap, savedMap, followMap, commentsMap, notifications]);
+
+  const showToast = (msg, duration) => {
+    const key = Date.now();
+    setToast({ msg, key, duration: duration || 2200 });
+    window.setTimeout(() => {
+      setToast((t) => (t && t.key === key ? null : t));
+    }, duration || 2200);
+  };
+
+  const fireBurst = (id) => {
+    setBurstMap((m) => ({ ...m, [id]: Date.now() }));
+    window.setTimeout(() => {
+      setBurstMap((m) => ({ ...m, [id]: 0 }));
+    }, 850);
+  };
+
+  const handleHeart = (id) => {
+    const video = videos.find((v) => v.id === id);
+    if (video && video.authorUid) {
+      if (!session) {
+        showToast("سجّل الدخول أولًا للإعجاب ✨");
+        return;
+      }
+      const next = !realLikedIds[id];
+      setLikeState(session.uid, id, next).catch(() => showToast("تعذّر تنفيذ العملية ⚠️"));
+      if (next) fireBurst(id);
+      return;
+    }
+    setLikedMap((m) => {
+      const next = !m[id];
+      if (next) fireBurst(id);
+      return { ...m, [id]: next };
+    });
+  };
+
+  const handleDoubleTap = (id) => {
+    const video = videos.find((v) => v.id === id);
+    if (video && video.authorUid) {
+      if (!session) {
+        showToast("سجّل الدخول أولًا للإعجاب ✨");
+        return;
+      }
+      if (!realLikedIds[id]) {
+        setLikeState(session.uid, id, true).catch(() => showToast("تعذّر تنفيذ العملية ⚠️"));
+      }
+      fireBurst(id);
+      return;
+    }
+    setLikedMap((m) => ({ ...m, [id]: true }));
+    fireBurst(id);
+  };
+
+  const handleSubmitComment = () => {
+    const text = commentDraft.trim();
+    if (!text || !commentsOpenId) return;
+    setCommentsMap((m) => ({
+      ...m,
+      [commentsOpenId]: [...(m[commentsOpenId] || []), { id: Date.now(), user: session ? toHandle(session.name) : "أنت", avatar: "✨", text }],
+    }));
+    setCommentDraft("");
+  };
+
+  const handleShareAction = async (channel) => {
+    const video = videos.find((v) => v.id === shareOpenId);
+    if (!video) return;
+    const url = `https://khurafa.app/v/${video.id}`;
+    const text = `${video.caption} — ${url}`;
+    if (channel === "copy") {
+      const ok = await copyText(url);
+      showToast(ok ? "تم نسخ الرابط ✨" : "تعذّر نسخ الرابط");
+    } else if (channel === "whatsapp") {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+      showToast("جارٍ فتح واتساب ✨");
+    } else if (channel === "twitter") {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+      showToast("جارٍ فتح X ✨");
+    } else if (channel === "native") {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "خُرافة", text: video.caption, url });
+        } catch (e) {}
+      } else {
+        const ok = await copyText(url);
+        showToast(ok ? "تم نسخ الرابط ✨" : "تعذّر النسخ");
+      }
+    }
+    if (video.authorUid) {
+      db.ref("videos/" + video.id + "/shares").transaction((cur) => (cur || 0) + 1);
+    } else {
+      setShareBumpMap((m) => ({ ...m, [video.id]: (m[video.id] || 0) + 1 }));
+    }
+    setShareOpenId(null);
+  };
+
+  const handleUpdateSession = (patch) => {
+    setSession((s) => (s ? { ...s, ...patch } : s));
+  };
+
+  const handleNavigateToUser = (uid) => {
+    if (session && uid === session.uid) {
+      setViewedProfileUid(null);
+      setView("profile");
+    } else {
+      setViewedProfileUid(uid);
+    }
+  };
+
+  const handleOpenProfile = (authorUid) => {
+    if (!authorUid) {
+      showToast("هذا حساب تجريبي ضمن العرض التوضيحي ✨");
+      return;
+    }
+    handleNavigateToUser(authorUid);
+  };
+
+  const requestDeleteVideo = () => {
+    const video = videos.find((v) => v.id === shareOpenId);
+    if (!video || !session || video.authorUid !== session.uid) return;
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDeleteVideo = async () => {
+    const video = videos.find((v) => v.id === shareOpenId);
+    setConfirmDeleteOpen(false);
+    if (!video) return;
+    try {
+      await deleteVideoRecord(video);
+      setShareOpenId(null);
+      showToast("تم حذف الفيديو ✨");
+    } catch (e) {
+      showToast("تعذّر حذف الفيديو، حاول مجددًا ⚠️");
+    }
+  };
+
+  const handleSelectVideo = (id) => {
+    setSpotlightId(id);
+    setTab("foryou");
+    setView("feed");
+    setActiveIndex(0);
+  };
+
+  const handleOpenVideoDetail = (id, contextList) => {
+    const list = contextList && contextList.length ? contextList : videos;
+    const idx = list.findIndex((v) => v.id === id);
+    const ordered = idx > 0 ? [list[idx], ...list.slice(0, idx), ...list.slice(idx + 1)] : list;
+    setDetailList(ordered);
+    setDetailActiveIndex(0);
+  };
+
+  const handleCloseVideoDetail = () => {
+    setDetailList(null);
+  };
+
+  const handleToggleFollowForVideo = (v) => {
+    if (v.authorUid) {
+      if (!session) {
+        showToast("سجّل الدخول للمتابعة ✨");
+        return;
+      }
+      handleToggleRealFollow(v.authorUid);
+    } else {
+      setFollowMap((m) => ({ ...m, [v.id]: !m[v.id] }));
+    }
+  };
+
+  const handleToggleSaveForVideo = (v) => {
+    if (v.authorUid) {
+      if (!session) {
+        showToast("سجّل الدخول أولًا للحفظ ✨");
+        return;
+      }
+      const next = !realSavedIds[v.id];
+      setSaveState(session.uid, v.id, next).catch(() => showToast("تعذّر تنفيذ العملية ⚠️"));
+      if (next) showToast("تم الحفظ ✨");
+      return;
+    }
+    setSavedMap((m) => {
+      const next = !m[v.id];
+      if (next) showToast("تم الحفظ ✨");
+      return { ...m, [v.id]: next };
+    });
+  };
+
+  const handleOpenSoundForVideo = (v) => {
+    setSearchQuery(v.song.split("—")[0].trim());
+    setDetailList(null);
+    setView("discover");
+  };
+
+  const handleMarkRead = (id) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  };
+
+  const handleFileSelected = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (pendingVideoUrl) URL.revokeObjectURL(pendingVideoUrl);
+    const url = URL.createObjectURL(file);
+    setPendingVideoFile(file);
+    setPendingVideoUrl(url);
+  };
+
+  const handleClearVideo = () => {
+    if (pendingVideoUrl) URL.revokeObjectURL(pendingVideoUrl);
+    setPendingVideoFile(null);
+    setPendingVideoUrl(null);
+  };
+
+  const handleCloseCreate = () => {
+    if (publishing) return;
+    setCreateOpen(false);
+    handleClearVideo();
+    setNewCaption("");
+  };
+
+  const handlePublish = async () => {
+    const text = newCaption.trim();
+    if (!text && !pendingVideoFile) return;
+    if (!session) {
+      showToast("سجّل الدخول أولًا للنشر ✨");
+      return;
+    }
+    setPublishing(true);
+    const scene = SCENE_PRESETS[Math.floor(Math.random() * SCENE_PRESETS.length)];
+    let publishFailed = false;
+    let localOnly = false;
+    let publishedVideo = null;
+
+    try {
+      const ref = db.ref("videos").push();
+      const videoId = ref.key;
+      let videoUrl = null;
+      let hasRealVideo = false;
+
+      if (pendingVideoFile) {
+        try {
+          videoUrl = await uploadVideoToStorage(session.uid, videoId, pendingVideoFile);
+          hasRealVideo = true;
+        } catch (uploadErr) {
+          const saved = await idbSaveVideo(videoId, pendingVideoFile);
+          if (saved) {
+            hasRealVideo = true;
+            localOnly = true;
+          }
+        }
+      }
+
+      const record = {
+        id: videoId,
+        authorUid: session.uid,
+        authorKhurafaId: session.khurafaId || "",
+        user: toHandle(session.name),
+        avatar: "🌟",
+        caption: text || "بلا وصف ✨",
+        song: "صوت أصلي — " + session.name,
+        likes: 0,
+        shares: 0,
+        saves: 0,
+        colors: scene.colors,
+        hasRealVideo,
+        videoUrl: videoUrl || null,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+      };
+      await ref.set(record);
+      publishedVideo = record;
+    } catch (err) {
+      publishFailed = true;
+      console.error("Publish failed:", err);
+      showToast("فشل النشر: " + ((err && (err.code || err.message)) || "خطأ غير معروف"), 5000);
+    }
+
+    setPublishing(false);
+
+    if (publishFailed) {
+      return;
+    }
+
+    setCreateOpen(false);
+    handleClearVideo();
+    setNewCaption("");
+    setTab("foryou");
+    setView("feed");
+    setActiveIndex(0);
+
+    if (publishedVideo) {
+      handleOpenVideoDetail(publishedVideo.id, [publishedVideo, ...videos]);
+    }
+
+    if (pendingVideoFile && localOnly) {
+      showToast("تم النشر، لكن الفيديو محفوظ محليًا فقط (تعذّر الرفع السحابي) ⚠️");
+    } else if (pendingVideoFile) {
+      showToast("تم نشر فيديوك الحقيقي على حسابك ✨");
+    } else {
+      showToast("تم النشر على حسابك ✨");
+    }
+  };
+
+  const handleResetData = () => {
+    if (!resetArmed) {
+      setResetArmed(true);
+      showToast("اضغط مرة أخرى للتأكيد ⚠️");
+      window.setTimeout(() => setResetArmed(false), 3000);
+      return;
+    }
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
+    idbClearAll();
+    setLikedMap({});
+    setSavedMap({});
+    setFollowMap({});
+    setShareBumpMap({});
+    setCommentsMap(SEED_COMMENTS);
+    setNotifications(INITIAL_NOTIFICATIONS);
+    setResetArmed(false);
+    showToast("تمت إعادة ضبط التفاعلات المحلية على هذا الجهاز ✨");
+  };
+
+  const handleToggleRealFollow = async (targetUid) => {
+    if (!session) {
+      showToast("سجّل الدخول أولًا للمتابعة ✨");
+      return;
+    }
+    if (!targetUid || targetUid === session.uid) return;
+    try {
+      if (followingUids[targetUid]) {
+        await unfollowRealUser(session.uid, targetUid);
+        showToast("تم إلغاء المتابعة");
+      } else {
+        await followRealUser(session.uid, targetUid);
+        showToast("تمت المتابعة ✨");
+      }
+    } catch (e) {
+      showToast("تعذّر تنفيذ العملية: " + ((e && (e.code || e.message)) || "خطأ غير معروف"), 5000);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+    } catch (e) {}
+    setView("feed");
+  };
+
+  const baseList = tab === "following" ? videos.filter((v) => (v.authorUid ? !!followingUids[v.authorUid] : !!followMap[v.id])) : videos;
+  const feedList = useMemo(() => {
+    if (!spotlightId) return baseList;
+    const idx = baseList.findIndex((v) => v.id === spotlightId);
+    if (idx <= 0) return baseList;
+    const copy = [...baseList];
+    const [item] = copy.splice(idx, 1);
+    return [item, ...copy];
+  }, [baseList, spotlightId]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  return (
+    <div
+      className="khurafa-root"
+      style={{ width: "100%", background: `linear-gradient(180deg, ${palette.void} 0%, ${palette.void2} 100%)`, display: "flex", alignItems: "center", justifyContent: "center" }}
+    >
+      <style>{`
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        .khurafa-root { height: 100vh; height: 100dvh; }
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&family=Tajawal:wght@400;500;700;900&display=swap');
+        @keyframes rise {
+          0% { transform: translateY(0); opacity: 0; }
+          10% { opacity: 1; }
+          85% { opacity: 0.9; }
+          100% { transform: translateY(-105vh); opacity: 0; }
+        }
+        @keyframes auroraDrift {
+          0% { transform: translate(-8%, -6%) scale(1); }
+          50% { transform: translate(8%, 6%) scale(1.18); }
+          100% { transform: translate(-8%, -6%) scale(1); }
+        }
+        @keyframes spinSlow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes portalPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255,62,165,0.55); }
+          50% { box-shadow: 0 0 0 7px rgba(255,62,165,0); }
+        }
+        @keyframes burstHeart {
+          0% { transform: scale(0.3); opacity: 0; }
+          25% { transform: scale(1.25); opacity: 1; }
+          65% { transform: scale(1); opacity: 1; }
+          100% { transform: scale(1); opacity: 0; }
+        }
+        @keyframes sparkleOut {
+          0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+          30% { opacity: 1; }
+          100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1); opacity: 0; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        @keyframes toastPop {
+          0% { opacity: 0; transform: translate(-50%, 10px); }
+          10% { opacity: 1; transform: translate(-50%, 0); }
+          85% { opacity: 1; }
+          100% { opacity: 0; transform: translate(-50%, -6px); }
+        }
+        .khurafa-feed::-webkit-scrollbar { display: none; }
+      `}</style>
+
+      {authLoading ? (
+        <div style={{ position: "relative", width: "100%", maxWidth: 480, height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 34 }}>✨</span>
+        </div>
+      ) : !session ? (
+        <AuthScreen />
+      ) : (
+      <div style={{ position: "relative", width: "100%", maxWidth: 480, height: "100%", overflow: "hidden", background: palette.void }}>
+        {view === "feed" && (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 54,
+                zIndex: 30,
+              }}
+            >
+              <div style={{ position: "absolute", left: "50%", top: 16, transform: "translateX(-50%)", display: "flex", flexDirection: "row", alignItems: "center", gap: 20 }}>
+                {[
+                  { key: "following", label: "متابَعة" },
+                  { key: "foryou", label: "لك" },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => {
+                      setTab(t.key);
+                      setActiveIndex(0);
+                    }}
+                    style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: 0, margin: 0 }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "'Baloo Bhaijaan 2', sans-serif",
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: tab === t.key ? palette.moon : `${palette.moon}99`,
+                        textShadow: "0 1px 6px rgba(0,0,0,0.6)",
+                      }}
+                    >
+                      {t.label}
+                    </span>
+                    <span
+                      style={{
+                        width: tab === t.key ? 20 : 0,
+                        height: 2.5,
+                        borderRadius: 999,
+                        background: `linear-gradient(90deg, ${palette.magenta}, ${palette.gold})`,
+                        transition: "width 0.2s ease",
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setView("discover")}
+                style={{ position: "absolute", right: 16, top: 12, background: "none", border: "none", cursor: "pointer", padding: 4, margin: 0 }}
+              >
+                <Search style={{ width: 21, height: 21, color: palette.moon, filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.6))" }} />
+              </button>
+            </div>
+
+            {feedList.length === 0 ? (
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, padding: 30, direction: "rtl" }}>
+                <span style={{ fontSize: 40 }}>🌌</span>
+                <p style={{ color: palette.moon, fontFamily: "'Tajawal', sans-serif", fontSize: 14, textAlign: "center", lineHeight: 1.6 }}>
+                  لم تتابع أحدًا بعد
+                  <br />
+                  تابع مبدعين ليظهر سحرهم هنا
+                </p>
+                <button
+                  onClick={() => setView("discover")}
+                  style={{
+                    background: `linear-gradient(135deg, ${palette.magenta}, ${palette.gold})`,
+                    border: "none",
+                    borderRadius: 999,
+                    padding: "10px 22px",
+                    color: palette.moon,
+                    fontFamily: "'Tajawal', sans-serif",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
+                  }}
+                >
+                  اكتشف مبدعين
+                </button>
+              </div>
+            ) : (
+              <VideoFeedScroller
+                list={feedList}
+                activeIndex={activeIndex}
+                onScrollIndex={setActiveIndex}
+                paused={!!viewedProfileUid || !!detailList}
+                likedMap={likedMap}
+                savedMap={savedMap}
+                followMap={followMap}
+                followingUids={followingUids}
+                realLikedIds={realLikedIds}
+                realSavedIds={realSavedIds}
+                session={session}
+                muted={muted}
+                burstMap={burstMap}
+                commentsMap={commentsMap}
+                shareBumpMap={shareBumpMap}
+                onHeart={handleHeart}
+                onDoubleTap={handleDoubleTap}
+                onToggleFollow={handleToggleFollowForVideo}
+                onToggleSave={handleToggleSaveForVideo}
+                onOpenComments={(id) => setCommentsOpenId(id)}
+                onOpenShare={(id) => setShareOpenId(id)}
+                onOpenSound={handleOpenSoundForVideo}
+                onUnmuteOnPlay={() => setMuted(false)}
+                onOpenProfile={handleOpenProfile}
+              />
+            )}
+          </>
+        )}
+
+        {view === "discover" && (
+          <DiscoverView
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            videos={videos}
+            followMap={followMap}
+            onToggleFollow={(id) => setFollowMap((m) => ({ ...m, [id]: !m[id] }))}
+            onSelectVideo={handleOpenVideoDetail}
+            followingUids={followingUids}
+            session={session}
+            onToggleRealFollow={handleToggleRealFollow}
+            onNavigateToUser={handleNavigateToUser}
+          />
+        )}
+
+        {view === "inbox" && <InboxView notifications={notifications} onMarkRead={handleMarkRead} />}
+
+        {view === "profile" && (
+          <ProfileView
+            videos={videos}
+            likedMap={likedMap}
+            savedMap={savedMap}
+            followMap={followMap}
+            profileTab={profileTab}
+            setProfileTab={setProfileTab}
+            onSelectVideo={handleOpenVideoDetail}
+            storageOK={storageOK}
+            resetArmed={resetArmed}
+            onReset={handleResetData}
+            session={session}
+            onLogout={handleLogout}
+            followingCount={Object.keys(followingUids).length}
+            followersCount={followersCount}
+            onSessionUpdate={handleUpdateSession}
+            onNavigateToUser={handleNavigateToUser}
+            realLikedIds={realLikedIds}
+            realSavedIds={realSavedIds}
+          />
+        )}
+
+        {viewedProfileUid && (
+          <PublicProfileView
+            uid={viewedProfileUid}
+            videos={videos}
+            followingUids={followingUids}
+            session={session}
+            onToggleRealFollow={handleToggleRealFollow}
+            onBack={() => setViewedProfileUid(null)}
+            onSelectVideo={handleOpenVideoDetail}
+            onNavigateToUser={handleNavigateToUser}
+          />
+        )}
+
+        {detailList && (
+          <div style={{ position: "absolute", inset: 0, zIndex: 48, background: palette.void, overflow: "hidden" }}>
+            <button
+              onClick={handleCloseVideoDetail}
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                zIndex: 20,
+                background: "rgba(11,6,24,0.55)",
+                border: `1px solid ${palette.moon}22`,
+                borderRadius: "50%",
+                width: 36,
+                height: 36,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <X style={{ width: 18, height: 18, color: palette.moon }} />
+            </button>
+            <VideoFeedScroller
+              list={detailList}
+              activeIndex={detailActiveIndex}
+              onScrollIndex={setDetailActiveIndex}
+              paused={false}
+              likedMap={likedMap}
+              savedMap={savedMap}
+              followMap={followMap}
+              followingUids={followingUids}
+              realLikedIds={realLikedIds}
+              realSavedIds={realSavedIds}
+              session={session}
+              muted={muted}
+              burstMap={burstMap}
+              commentsMap={commentsMap}
+              shareBumpMap={shareBumpMap}
+              onHeart={handleHeart}
+              onDoubleTap={handleDoubleTap}
+              onToggleFollow={handleToggleFollowForVideo}
+              onToggleSave={handleToggleSaveForVideo}
+              onOpenComments={(id) => setCommentsOpenId(id)}
+              onOpenShare={(id) => setShareOpenId(id)}
+              onOpenSound={handleOpenSoundForVideo}
+              onUnmuteOnPlay={() => setMuted(false)}
+              onOpenProfile={handleOpenProfile}
+            />
+          </div>
+        )}
+
+        {commentsOpenId ? (
+          <CommentsDrawer
+            comments={commentsMap[commentsOpenId] || []}
+            draft={commentDraft}
+            onDraftChange={setCommentDraft}
+            onSubmit={handleSubmitComment}
+            onClose={() => {
+              setCommentsOpenId(null);
+              setCommentDraft("");
+            }}
+          />
+        ) : null}
+
+        {shareOpenId ? (
+          <ShareDrawer
+            onClose={() => setShareOpenId(null)}
+            onAction={handleShareAction}
+            canDelete={(() => {
+              const v = videos.find((x) => x.id === shareOpenId);
+              return !!(v && session && v.authorUid === session.uid);
+            })()}
+            onDelete={requestDeleteVideo}
+          />
+        ) : null}
+
+        {confirmDeleteOpen ? (
+          <ConfirmModal
+            title="حذف الفيديو"
+            message="هل تريد حذف هذا الفيديو نهائيًا؟ لا يمكن التراجع عن هذا الإجراء."
+            confirmLabel="حذف"
+            danger
+            onConfirm={handleConfirmDeleteVideo}
+            onCancel={() => setConfirmDeleteOpen(false)}
+          />
+        ) : null}
+
+        {createOpen ? (
+          <CreateModal
+            caption={newCaption}
+            onCaptionChange={setNewCaption}
+            onClose={handleCloseCreate}
+            onPublish={handlePublish}
+            videoUrl={pendingVideoUrl}
+            onFileSelected={handleFileSelected}
+            onClearVideo={handleClearVideo}
+            idbOK={idbOK}
+            publishing={publishing}
+          />
+        ) : null}
+
+        {toast ? <Toast message={toast.msg} duration={toast.duration} /> : null}
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 30,
+            paddingTop: 8,
+            paddingBottom: "14px",
+            paddingLeft: 8,
+            paddingRight: 8,
+            display: "flex",
+            alignItems: "center",
+            background: `linear-gradient(to top, ${palette.void}f2 45%, transparent)`,
+            borderTop: `1px solid ${palette.moon}14`,
+          }}
+        >
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <NavItem icon={<Home />} label="الرئيسية" active={view === "feed"} onClick={() => setView("feed")} />
+          </div>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <NavItem icon={<Compass />} label="استكشاف" active={view === "discover"} onClick={() => setView("discover")} />
+          </div>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <AddButton onClick={() => setCreateOpen(true)} />
+          </div>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <NavItem icon={<Inbox />} label="الوارد" active={view === "inbox"} badge={unreadCount > 0 ? unreadCount : null} onClick={() => setView("inbox")} />
+          </div>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <NavItem icon={<User />} label="أنا" active={view === "profile"} onClick={() => setView("profile")} />
+          </div>
+        </div>
+      </div>
+      )}
+    </div>
+  );
+}
+
+
+const rootEl = document.getElementById('root');
+ReactDOM.createRoot(rootEl).render(<KhurafaApp />);
+
+</script>
+<script>
+  (function () {
+    try {
+      var source = document.getElementById("app-source").textContent;
+      var result = Babel.transform(source, { presets: [["react", { runtime: "classic" }]] });
+      var script = document.createElement("script");
+      script.textContent = result.code;
+      document.body.appendChild(script);
+    } catch (e) {
+      var boot = document.getElementById("boot-msg");
+      if (boot) boot.textContent = "حدث خطأ أثناء التحميل: " + e.message;
+      console.error(e);
+    }
+  })();
+</script>
+</body>
+</html>
